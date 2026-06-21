@@ -1,9 +1,29 @@
 # Deep Research Harness Eval — Product & Evaluation Spec
 
-> Status: Draft v0.1  
-> Target: 14-day portfolio MVP  
-> Parent brand: Agent Reliability Lab  
+> Status: v0.2 — implementation baseline
+>
+> Target: 14-day portfolio MVP
+>
+> Parent brand: Agent Reliability Lab
+>
 > Demo question: “Compare the agent memory architectures of Mem0, Letta, Zep, and Cognee.”
+
+## Contents
+
+- [Scope](#5-scope)
+- [Research question](#6-research-question)
+- [Experimental configurations](#7-experimental-configurations)
+- [Provider qualification gate](#provider-qualification-gate)
+- [Cross-model external-validity subset](#cross-model-external-validity-subset)
+- [Metrics](#10-metrics)
+- [Permission model](#11-permission-model)
+- [Compaction design](#12-compaction-design)
+- [Sub-agent handoff contract](#13-sub-agent-handoff-contract)
+- [Interruption and recovery](#14-interruption-and-recovery-test)
+- [Evaluation procedure](#15-evaluation-procedure)
+- [MVP gates](#17-mvp-gates)
+- [Risks and countermeasures](#20-risks-and-countermeasures)
+- [Provider decision record](#22-provider-decision-record)
 
 ## 1. One-line definition
 
@@ -50,13 +70,14 @@ When a research task requires many sources and can exceed the model’s practica
 - Twenty task cases derived from the memory-architecture research domain.
 - Structured traces, checkpoints, and failure labels.
 - Automated scoring plus a small, blinded human audit.
-- One model and one provider for the primary ablation.
+- `deepseek-v4-flash` through the official DeepSeek API for the primary ablation.
+- Claude Sonnet 4.6 through AiHubMix for a separately reported external-validity subset, subject to provider qualification.
 - CLI execution; a lightweight local viewer is optional only after evaluation works.
 
 ### Out of scope for the 14-day MVP
 
 - Comparing Mem0, Letta, Zep, and Cognee as memory backends. That is the follow-on S1 project.
-- Multi-model benchmarking.
+- A broad multi-model benchmark. The Claude subset tests external validity only.
 - Production authentication or real destructive actions.
 - General-purpose browser automation.
 - A polished SaaS interface.
@@ -89,12 +110,65 @@ The experiment is cumulative so each step answers a product decision.
 
 ### Required controls
 
-- Same model and model parameters.
+- Same `deepseek-v4-flash` model identifier, official provider, and model parameters throughout the primary matrix.
 - Same task inputs and frozen source corpus.
 - Same tool schemas where a configuration does not explicitly change them.
 - Same run budget.
 - Deterministic seeds where supported.
 - At least one repeated run per task/configuration; increase repeats only after the 80-run matrix completes.
+- Persist the returned model identifier, provider, endpoint class, token usage, cache usage, and request ID in every trace.
+
+## Provider qualification gate
+
+A provider must pass all four gates before it can produce eval-valid runs. Probe artifacts are versioned under `results/provider-probes/`.
+
+| Gate | Requirement | Passing evidence |
+|---|---|---|
+| G1 — Identity | The requested model is returned without silent substitution. | Returned model identifier matches the allowlist on every probe; any mismatch fails the provider. |
+| G2 — Cache accounting | Repeated static prefixes produce observable cache hits and attributable token or cost accounting. | The second identical-prefix request reports cache-hit usage; provider billing agrees with recorded usage within the documented tolerance. |
+| G3 — Tool fidelity | Tool schemas, arguments, result IDs, and multi-turn tool state survive the provider boundary. | A deterministic three-turn, five-tool fixture passes schema validation with no adapter repair. |
+| G4 — Stability | The endpoint can complete the planned matrix without unacceptable throttling or identity drift. | A 20-request soak test has zero identity mismatches and at least 95% non-retried success; limits and retry behavior are recorded. |
+
+Gate policy:
+
+- Failed probes are preserved; they are not deleted or rerun until they pass invisibly.
+- A provider failure is `infra_api_failed`, not an agent-quality failure.
+- A provider cannot be changed mid-matrix. If replacement is necessary, the affected matrix restarts under a new run-group ID.
+- Pricing, model aliases, and provider documentation are frozen with a retrieval date before the first eval-valid run.
+
+### Qualification status
+
+| Role | Model | Provider | Status |
+|---|---|---|---|
+| Primary | `deepseek-v4-flash` | DeepSeek official API | Pending G1–G4 probes |
+| External validity | Claude Sonnet 4.6 | AiHubMix Anthropic-compatible endpoint | Pending G1–G4 probes |
+
+The legacy alias `deepseek-chat` is not used in configuration files because DeepSeek has announced its retirement on July 24, 2026.
+
+## Cross-model external-validity subset
+
+The primary causal claim comes only from the fixed-model 80-run DeepSeek matrix.
+
+After the primary matrix completes, run a stratified Claude subset:
+
+```text
+8 tasks × 4 configurations = 32 validation runs
+```
+
+The eight tasks contain:
+
+- two architecture-comparison tasks;
+- two lifecycle or retrieval tasks;
+- two operational or recommendation tasks;
+- two adversarial or recovery-injection tasks.
+
+Rules:
+
+- Use the same frozen sources, task rubrics, tool schemas, configuration flags, and run budgets.
+- Treat provider-specific cache mechanisms as measured implementation details, not equivalent internals.
+- Report Claude results beside the DeepSeek results, never pooled with them.
+- Describe agreement or disagreement in configuration rankings; do not claim a general model comparison from 32 runs.
+- If AiHubMix fails a qualification gate, omit the subset and report the failed gate instead of substituting another provider silently.
 
 ## 8. Reference workflow
 
@@ -291,9 +365,10 @@ A resumed run passes only if it:
 
 ```text
 20 tasks × 4 configurations = 80 primary runs
+8 stratified tasks × 4 configurations = 32 external-validity runs
 ```
 
-Run the 80-case matrix before adding repeats. If budget permits, repeat a stratified subset containing:
+Run the 80-case primary matrix before the 32-case external-validity subset or any repeats. If budget permits, repeat a stratified subset containing:
 
 - four easy tasks;
 - four adversarial tasks;
@@ -343,6 +418,7 @@ Every unsuccessful eval-valid run receives one primary failure label:
 
 ### MVP-1 — Demonstrable baseline, Day 5
 
+- The primary provider passes G1–G4 and probe artifacts are committed.
 - C0 completes one end-to-end task.
 - Five benchmark tasks are runnable.
 - Every model/tool call is captured in a trace.
@@ -353,6 +429,7 @@ Every unsuccessful eval-valid run receives one primary failure label:
 
 - C0–C3 all run through one interface.
 - Twenty tasks and the 80-run matrix complete or have explicit status labels.
+- The 32-run external-validity subset completes or has an explicit provider-gate failure record.
 - Both north-star metrics and four supporting metrics are generated.
 - At least one interruption/recovery test passes.
 - A result table and badcase taxonomy are produced.
@@ -369,16 +446,16 @@ Every unsuccessful eval-valid run receives one primary failure label:
 
 | Day | Deliverable |
 |---|---|
-| 1 | Freeze this spec, choose one model/provider, define schemas |
+| 1 | Freeze spec v0.2, provider gates, model allowlists, and trace schemas |
 | 2 | Create repository skeleton, source snapshot format, five seed tasks |
-| 3 | Implement tool interface, evidence store, and trace format |
+| 3 | Run provider probes; implement tool interface, evidence store, and trace format |
 | 4 | Implement C0 ReAct baseline |
 | 5 | Run five tasks, calculate first EGTSR, tag MVP-1 |
 | 6 | Implement compaction and critical-fact retention check |
 | 7 | Implement permission policy and test fixtures |
 | 8 | Implement sub-agent handoff contract and checkpointing |
-| 9 | Run 20 × 4 matrix, generate results, tag MVP-2 |
-| 10 | Audit failures and fix evaluation bugs only |
+| 9 | Run 20 × 4 primary matrix, generate results, tag MVP-2 |
+| 10 | Run 8 × 4 external-validity subset; audit evaluation failures |
 | 11 | Run recovery tests and blinded human sample |
 | 12 | Record demo and create architecture/results visuals |
 | 13 | Draft English and Chinese articles plus PM retrospective |
@@ -406,6 +483,7 @@ deep-research-harness/
 │   └── evals/
 ├── tests/
 ├── results/
+│   ├── provider-probes/
 │   ├── raw/
 │   ├── processed/
 │   └── figures/
@@ -419,6 +497,10 @@ deep-research-harness/
 | Risk | Countermeasure |
 |---|---|
 | Live sources change during evaluation | Freeze dated source snapshots and hashes |
+| Model alias changes during the project | Pin the canonical model identifier and freeze returned identity in every trace |
+| Provider silently substitutes a model | Enforce G1 on probes and every run; invalidate the run group on any mismatch |
+| Cache accounting is unavailable or misleading | Enforce G2 and report raw token usage alongside provider-reported cost |
+| Provider fails during the matrix | Do not mix providers; restart under a new run-group ID or publish the incomplete matrix |
 | Scope expands into S1 memory comparison | Treat memory products as research subjects, not integrated backends |
 | LLM judge becomes the entire evaluation | Prefer deterministic checks and publish human disagreement |
 | Cumulative configs obscure component effects | Keep feature flags and run targeted rollback cases for surprising results |
@@ -436,3 +518,33 @@ The project is done when a reviewer can answer these questions from the reposito
 4. Can the results be reproduced from frozen inputs?
 5. What product decision would the evidence support?
 
+## 22. Provider decision record
+
+### Selected paths
+
+- **Primary:** `deepseek-v4-flash` through the official DeepSeek API. This keeps the 80-run causal comparison on one model and one first-party provider.
+- **External validity:** Claude Sonnet 4.6 through AiHubMix, conditional on G1–G4. AiHubMix documents an Anthropic-shaped `/v1/messages` endpoint and Claude prompt-cache controls, but documentation is not treated as proof until the probes pass.
+
+### Excluded providers
+
+| Provider | Decision | Reason |
+|---|---|---|
+| 302.AI Claude Code endpoint | Excluded from eval-valid runs | Its documentation states that requests may be automatically switched to GLM or K2-family models during Claude risk-control events. Silent substitution violates the fixed-model control and G1 identity gate. |
+| Any unqualified aggregator | Excluded until qualified | Low price or API compatibility does not establish model identity, cache accounting, tool fidelity, or matrix stability. |
+
+### Decision-change protocol
+
+Any provider or model change requires:
+
+1. a new spec revision;
+2. fresh G1–G4 probes;
+3. a new run-group ID;
+4. separate reporting from earlier results;
+5. a public rationale in the repository history.
+
+Reference documentation is frozen before evaluation:
+
+- DeepSeek model lifecycle and canonical identifiers: <https://api-docs.deepseek.com/quick_start/pricing>
+- AiHubMix Anthropic-compatible messages API: <https://docs.aihubmix.com/cn/api-reference/anthropic-compatible/create-a-message>
+- AiHubMix Claude cache controls: <https://docs.aihubmix.com/en/api/Claude-Cache>
+- 302.AI Claude Code routing disclosure: <https://doc.302.ai/393804750e0>

@@ -1,135 +1,110 @@
-# Agent Reliability Lab
+# Deep Research Harness Eval
 
-**Open experiments on how AI agents remember, recover, use tools, and earn trust.**
+**A controlled evaluation of the infrastructure that makes long-running research agents reliable.**
 
-Agent Reliability Lab is a portfolio of reproducible evaluations focused on the infrastructure around an AI agent—not just the model at its center.
+This project builds one inspectable deep-research agent, then changes one harness control at a time to measure the effect on answer quality, cost, safety, and recovery.
 
-The lab studies a practical question:
+It is the active system-reliability project from [Agent Reliability Lab](https://github.com/agent-reliability-lab).
 
-> What makes an agent remain useful when tasks become long, tools become risky, context becomes crowded, and execution gets interrupted?
+## Research question
 
-## Research thesis
+> Which harness controls materially improve evidence-grounded task success without making successful runs disproportionately expensive?
 
-Longer context windows expand what an agent can access. They do not determine:
+Long context alone does not decide:
 
-- what should enter the active working set;
-- what should be persisted or forgotten;
-- when an action requires permission;
-- how sub-agents should hand work back;
-- whether a task can recover after interruption;
-- how reliability should be measured.
+- what belongs in the active working set;
+- what should be summarized, persisted, or discarded;
+- which actions require permission;
+- how sub-agents return evidence without polluting context;
+- whether execution can recover after interruption.
 
-The lab treats those choices as testable system and product decisions.
+This repository treats those choices as testable engineering decisions.
 
-## Project map
+## Controlled configurations
 
-| Project | Layer | Question | Status |
-|---|---|---|---|
-| [Chinese Long-Context LLM Benchmark V2](https://github.com/agent-reliability-lab/llm-long-context-eval-zh-V2) | Model measurement | How reliably do Chinese LLMs retrieve and reason across longer contexts? | Complete, frozen at v2.0.1 |
-| Deep Research Harness Eval | Agent reliability infrastructure | How do compaction, permission gates, sub-agents, and recovery change quality and cost? | In progress |
-| Agent Memory Systems Benchmark | Persistent memory | How do Mem0, Letta, Zep, and Cognee differ under controlled memory tasks? | Planned after Harness Eval |
+| ID | Configuration | Added control |
+|---|---|---|
+| C0 | ReAct baseline | Single-agent tool loop with a full running transcript |
+| C1 | C0 + compaction | Triggered summary and external evidence store |
+| C2 | C1 + permission gate | Policy engine and simulated approval flow |
+| C3 | C2 + sub-agents | Parallel research workers with structured handoffs |
+
+The primary matrix contains twenty frozen tasks across all four configurations.
+
+## Model and provider strategy
+
+- **Primary ablation:** `deepseek-v4-flash` through the official DeepSeek API.
+- **External-validity subset:** Claude Sonnet 4.6 through AiHubMix, only after the provider passes deterministic qualification gates.
+- **Excluded:** providers that permit silent model substitution, because model identity is a controlled variable.
+
+Primary and validation results are reported separately; they are never pooled into one headline metric.
+
+See the [provider qualification gate](spec.md#provider-qualification-gate) and [cross-model validation design](spec.md#cross-model-external-validity-subset).
+
+## Metrics
+
+North-star metrics:
+
+1. **Evidence-Grounded Task Success Rate**
+2. **Cost per Successful Task**
+
+Supporting metrics:
+
+- citation precision;
+- required-claim coverage;
+- peak active-context tokens;
+- interruption recovery success.
+
+Infrastructure failures, source failures, expected policy blocks, and agent failures receive separate status labels.
+
+## Reproducibility contract
+
+- Freeze task inputs and source snapshots.
+- Keep the primary model, provider, parameters, tools, and run budget fixed.
+- Store model identity, token usage, cache usage, latency, cost, tool calls, and failure metadata in every trace.
+- Permit final-report citations only when the cited evidence record exists in the trace.
+- Publish badcases and limitations with headline results.
+
+## Current status
+
+**Spec v0.2 — implementation baseline**
+
+- [x] Four-configuration ablation defined
+- [x] Twenty-task evaluation design defined
+- [x] Provider qualification and exclusion policy defined
+- [ ] Provider probes executed and recorded
+- [ ] C0 baseline implemented
+- [ ] 80-run primary matrix completed
+- [ ] 32-run external-validity subset completed
+
+Read the full [product and evaluation specification](spec.md).
+
+## Planned repository shape
 
 ```text
-                       Agent Reliability Lab
-                                  |
-             +--------------------+--------------------+
-             |                    |                    |
-     Long-context V2      Deep Research Harness     Memory Benchmark
-     model measurement     system reliability       persistent memory
-        COMPLETE              IN PROGRESS               PLANNED
+deep-research-harness/
+├── README.md
+├── spec.md
+├── pyproject.toml
+├── configs/
+├── data/
+│   ├── source_snapshots/
+│   └── tasks/
+├── src/
+│   ├── agent/
+│   ├── harness/
+│   ├── tools/
+│   └── evals/
+├── tests/
+├── results/
+│   ├── raw/
+│   ├── processed/
+│   └── figures/
+└── docs/
 ```
 
-## Current focus: Deep Research Harness Eval
+## Related work
 
-The current project builds one inspectable deep-research agent and runs a controlled four-configuration ablation:
+The preceding measurement-layer project is [Chinese Long-Context LLM Benchmark V2](https://github.com/agent-reliability-lab/llm-long-context-eval-zh-V2).
 
-1. ReAct baseline
-2. Baseline + context compaction
-3. Compaction + permission gate
-4. Permission gate + structured sub-agents
-
-The public demo asks:
-
-> Compare the agent memory architectures of Mem0, Letta, Zep, and Cognee.
-
-The evaluation uses twenty narrower tasks and a frozen source snapshot so results can be reproduced.
-
-Primary metrics:
-
-- **Evidence-Grounded Task Success Rate**
-- **Cost per Successful Task**
-
-Supporting metrics cover citation quality, required-claim coverage, peak active context, and interruption recovery.
-
-Read the [project specification](spec.md).
-
-## Completed foundation: Long-Context V2
-
-The first lab project established the measurement layer:
-
-- 1,050 Chinese NIAH calls;
-- 96 multi-hop results;
-- three models;
-- harder numeric, stylistic, and multi-key distractors;
-- confidence intervals and efficiency metrics;
-- explicit separation of model failures, content filters, and infrastructure failures;
-- a published badcase taxonomy.
-
-Its central engineering lesson is simple:
-
-> Persist failure metadata. Otherwise billing errors, safety filters, and timeouts are easily misreported as model intelligence failures.
-
-Repository: [llm-long-context-eval-zh-V2](https://github.com/agent-reliability-lab/llm-long-context-eval-zh-V2)
-
-## Evaluation principles
-
-Every lab project follows the same rules:
-
-1. **Freeze inputs.** Live systems may be used for collection, but evaluation inputs must be versioned.
-2. **Separate capability from infrastructure.** API failures and policy blocks are not silently scored as reasoning failures.
-3. **Measure systems, not screenshots.** Every headline result must be reproducible from raw traces.
-4. **Publish badcases.** Failure categories are part of the product, not an appendix.
-5. **Prefer controlled comparisons.** Change one architectural decision at a time whenever possible.
-6. **Report quality and cost together.** A more capable configuration may still be a worse product choice.
-7. **State limitations.** Small benchmarks are evidence, not universal truth.
-
-## Planned artifacts
-
-For the Deep Research Harness Eval:
-
-- open-source implementation;
-- frozen task and source dataset;
-- four-configuration ablation results;
-- trace viewer or inspectable run artifacts;
-- interruption-and-recovery test;
-- three-minute demo;
-- Chinese and English technical write-ups;
-- one-page product retrospective.
-
-## Roadmap
-
-### Now
-
-- Freeze the harness specification.
-- Build and measure the ReAct baseline.
-- Complete the 20-task × 4-configuration evaluation.
-
-### Next
-
-- Reuse the harness to compare persistent-memory systems.
-- Add multi-session memory write, update, conflict, and deletion tasks.
-
-### Later
-
-- Extend the reliability suite to GUI/computer-use agents.
-- Add adversarial tool-use and prompt-injection evaluations.
-
-## About
-
-Built by [Melody Ling](https://github.com/melody-ling-L), an AI product builder focused on agent systems, context engineering, evaluation, and memory.
-
-The work is designed to be useful in three ways:
-
-- as reproducible engineering evidence;
-- as a product-decision case study;
-- as an open learning resource for people building reliable agents.
+Built by [Melody Ling](https://github.com/melody-ling-L).
