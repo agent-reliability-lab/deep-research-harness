@@ -1,0 +1,27 @@
+[project]
+name = "deep-research-harness"
+version = "0.0.1"
+description = "Controlled ablation of deep-research agent reliability: compaction, permission gates, sub-agents, recovery."
+requires-python = ">=3.11"
+dependencies = [
+    "openai>=2.32,<3",
+    "anthropic>=0.97,<1",
+    "jsonschema>=4.23,<5",
+    "python-dotenv>=1.0,<2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.14,<1",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]

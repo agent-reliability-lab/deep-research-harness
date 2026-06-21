@@ -125,8 +125,8 @@ A provider must pass all four gates before it can produce eval-valid runs. Probe
 | Gate | Requirement | Passing evidence |
 |---|---|---|
 | G1 — Identity | The requested model is returned without silent substitution. | Returned model identifier matches the allowlist on every probe; any mismatch fails the provider. |
-| G2 — Cache accounting | Repeated static prefixes produce observable cache hits and attributable token or cost accounting. | The second identical-prefix request reports cache-hit usage; provider billing agrees with recorded usage within the documented tolerance. |
-| G3 — Tool fidelity | Tool schemas, arguments, result IDs, and multi-turn tool state survive the provider boundary. | A deterministic three-turn, five-tool fixture passes schema validation with no adapter repair. |
+| G2 — Cache accounting | Repeated static prefixes produce observable cache hits and attributable token or cost accounting. | A unique static prefix is sent three times with settle intervals; the final request reports a larger cache hit than the warm-up request, and provider billing agrees with recorded usage within the documented tolerance. |
+| G3 — Tool fidelity | Tool schemas, arguments, result IDs, and multi-turn tool state survive the provider boundary. | A deterministic multi-turn fixture forces each of five tools once, validates every argument against its schema, round-trips exact tool-call IDs, and accepts the final tool result with no adapter repair. |
 | G4 — Stability | The endpoint can complete the planned matrix without unacceptable throttling or identity drift. | A 20-request soak test has zero identity mismatches and at least 95% non-retried success; limits and retry behavior are recorded. |
 
 Gate policy:
