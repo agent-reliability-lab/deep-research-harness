@@ -12,7 +12,7 @@ from src.probes.deepseek_g1_identity import run as run_g1
 from src.probes.deepseek_g2_cache import run as run_g2
 from src.probes.deepseek_g3_tools import TOOLS, _validate_args
 from src.probes.deepseek_g3_tools import run as run_g3
-from src.probes.deepseek_g4_stability import G4_REQUEST_COUNT
+from src.probes.deepseek_g4_stability import G4_REQUEST_COUNT, _request_identifier
 from src.probes.deepseek_g4_stability import run as run_g4
 
 MODEL = "deepseek-v4-flash"
@@ -485,6 +485,16 @@ class GateDecisionTests(TestCase):
         self.assertEqual(
             result.evidence["summary"]["output_contract_mismatches"],
             1,
+        )
+
+    def test_g4_uses_completion_id_when_sdk_request_id_is_absent(self) -> None:
+        response = SimpleNamespace(
+            _request_id=None,
+            id="completion-uuid",
+        )
+        self.assertEqual(
+            _request_identifier(response),
+            ("completion-uuid", "response.id"),
         )
 
 

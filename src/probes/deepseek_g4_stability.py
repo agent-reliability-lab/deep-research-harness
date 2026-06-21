@@ -95,6 +95,16 @@ def _safe_error(exc: Exception) -> dict[str, Any]:
     return evidence
 
 
+def _request_identifier(response: Any) -> tuple[str | None, str | None]:
+    sdk_request_id = getattr(response, "_request_id", None)
+    if sdk_request_id:
+        return str(sdk_request_id), "_request_id"
+    response_id = getattr(response, "id", None)
+    if response_id:
+        return str(response_id), "response.id"
+    return None, None
+
+
 def run(
     model: str | None = None,
     client=None,
@@ -141,6 +151,7 @@ def run(
             )
             message = response.choices[0].message
             content = (message.content or "").strip()
+            request_id, request_id_source = _request_identifier(response)
             calls.append(
                 {
                     "index": index + 1,
@@ -153,7 +164,8 @@ def run(
                         "system_fingerprint",
                         None,
                     ),
-                    "request_id": getattr(response, "_request_id", None),
+                    "request_id": request_id,
+                    "request_id_source": request_id_source,
                     "finish_reason": response.choices[0].finish_reason,
                     "content": content,
                     "output_contract_match": content.casefold() == "ok",
@@ -199,6 +211,10 @@ def run(
     latency_values = [call["latency_ms"] for call in calls]
     returned_models = Counter(
         call["returned_model"] for call in successes
+    )
+    request_id_sources = Counter(
+        call["request_id_source"] for call in successes
+        if call["request_id_source"]
     )
     fingerprints = Counter(
         call["system_fingerprint"] for call in successes
@@ -249,6 +265,7 @@ def run(
             "missing_request_ids": len(missing_request_ids),
             "missing_usage": len(missing_usage),
             "returned_models": dict(returned_models),
+            "request_id_sources": dict(request_id_sources),
             "system_fingerprints": {
                 str(key): value for key, value in fingerprints.items()
             },
