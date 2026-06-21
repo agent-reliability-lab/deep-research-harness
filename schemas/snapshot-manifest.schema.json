@@ -102,6 +102,7 @@
     },
     "SourceType": {
       "enum": [
+        "synthetic_fixture",
         "official_docs",
         "official_repository",
         "research_paper",

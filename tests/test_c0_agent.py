@@ -1,0 +1,441 @@
+"""C0 loop, budget termination, provider classification, and fixture EGTSR."""
+
+from __future__ import annotations
+
+import json
+from decimal import Decimal
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from types import SimpleNamespace
+from unittest import TestCase
+
+from src.agent.budget import BudgetExceeded, BudgetTracker
+from src.agent.deepseek import DeepSeekProvider, TokenPricing
+from src.agent.fixture import FixtureProvider
+from src.agent.provider import ModelCompletion, ModelProtocolError
+from src.agent.runner import C0Runner
+from src.snapshots import SnapshotCorpus
+from src.tasks.load import load_task
+from src.tasks.models import BenchmarkTask, EvaluationMode
+from src.trace.models import (
+    CallCost,
+    CallStatus,
+    ChatMessage,
+    EvaluationStatus,
+    ModelCallEvent,
+    ModelUsage,
+    RunBudget,
+    ToolCallRequest,
+)
+from src.trace.store import TraceReader
+from src.trace.validate import validate_trace
+
+ROOT = Path(__file__).resolve().parents[1]
+TASK_PATH = ROOT / "data" / "fixtures" / "tasks" / "mem0-architecture.json"
+MANIFEST_PATH = (
+    ROOT / "data" / "fixtures" / "source_snapshots" / "manifest.json"
+)
+
+
+def budget(**overrides) -> RunBudget:
+    values = {
+        "max_model_calls": 10,
+        "max_tool_calls": 20,
+        "max_input_tokens": 100_000,
+        "max_output_tokens": 20_000,
+        "max_cost_usd": Decimal("5"),
+        "max_duration_ms": 60_000,
+    }
+    values.update(overrides)
+    return RunBudget(**values)
+
+
+def completion(
+    *,
+    model: str = "fixture-react-v1",
+    tool_calls: list[ToolCallRequest] | None = None,
+    cost: Decimal = Decimal("0"),
+) -> ModelCompletion:
+    return ModelCompletion(
+        returned_model=model,
+        provider_request_id="request-1",
+        system_fingerprint="fingerprint-1",
+        content=None if tool_calls else "unstructured answer",
+        tool_calls=tool_calls or [],
+        usage=ModelUsage(input_tokens=10, output_tokens=5),
+        cost=CallCost(input_usd=cost),
+        latency_ms=1,
+    )
+
+
+class StaticProvider:
+    provider_name = "fixture"
+    endpoint_class = "offline-test"
+    model = "fixture-react-v1"
+    model_parameters = {"deterministic": True}
+    pricing_version = "fixture-test"
+
+    def __init__(self, response=None, error: Exception | None = None) -> None:
+        self.response = response
+        self.error = error
+
+    def complete(self, messages, tools, *, max_output_tokens):
+        del messages, tools, max_output_tokens
+        if self.error:
+            raise self.error
+        return self.response
+
+
+class BudgetTrackerTests(TestCase):
+    def test_iteration_tool_token_cost_and_duration_limits_fail_closed(self) -> None:
+        now = [0.0]
+        tracker = BudgetTracker(
+            budget(
+                max_model_calls=2,
+                max_tool_calls=1,
+                max_input_tokens=10,
+                max_output_tokens=5,
+                max_cost_usd=Decimal("0.5"),
+                max_duration_ms=100,
+            ),
+            max_iterations=1,
+            clock=lambda: now[0],
+        )
+        tracker.before_model_call()
+        tracker.after_model_call(
+            ModelUsage(input_tokens=10, output_tokens=4),
+            CallCost(input_usd=Decimal("0.5")),
+        )
+        tracker.before_tool_calls(1)
+        tracker.record_tool_call()
+        with self.assertRaisesRegex(BudgetExceeded, "max_iterations"):
+            tracker.before_model_call()
+        with self.assertRaisesRegex(BudgetExceeded, "max_tool_calls"):
+            tracker.before_tool_calls(1)
+        now[0] = 0.101
+        with self.assertRaisesRegex(BudgetExceeded, "max_duration_ms"):
+            tracker.check_duration()
+
+    def test_post_call_token_and_cost_overages_raise(self) -> None:
+        cases = [
+            (
+                "max_input_tokens",
+                budget(max_input_tokens=9),
+                ModelUsage(input_tokens=10, output_tokens=1),
+                CallCost(),
+            ),
+            (
+                "max_output_tokens",
+                budget(max_output_tokens=4),
+                ModelUsage(input_tokens=1, output_tokens=5),
+                CallCost(),
+            ),
+            (
+                "max_cost_usd",
+                budget(max_cost_usd=Decimal("0.4")),
+                ModelUsage(input_tokens=1, output_tokens=1),
+                CallCost(input_usd=Decimal("0.5")),
+            ),
+        ]
+        for limit, run_budget, usage, cost in cases:
+            with self.subTest(limit=limit):
+                tracker = BudgetTracker(run_budget, max_iterations=2)
+                tracker.before_model_call()
+                with self.assertRaisesRegex(BudgetExceeded, limit):
+                    tracker.after_model_call(usage, cost)
+                self.assertFalse(tracker.within_limits())
+
+    def test_model_call_limit_is_independent_from_iteration_limit(self) -> None:
+        tracker = BudgetTracker(
+            budget(max_model_calls=1),
+            max_iterations=3,
+        )
+        tracker.before_model_call()
+        tracker.after_model_call(
+            ModelUsage(input_tokens=1, output_tokens=1),
+            CallCost(),
+        )
+        with self.assertRaisesRegex(BudgetExceeded, "max_model_calls"):
+            tracker.before_model_call()
+
+
+class C0RunnerTests(TestCase):
+    def setUp(self) -> None:
+        self.task = load_task(TASK_PATH)
+        self.corpus = SnapshotCorpus(MANIFEST_PATH)
+        self.corpus.verify_all()
+
+    def run_with(self, provider, *, run_budget=None, max_iterations=10):
+        temp_dir = TemporaryDirectory()
+        self.addCleanup(temp_dir.cleanup)
+        outcome = C0Runner(
+            task=self.task,
+            corpus=self.corpus,
+            provider=provider,
+            budget=run_budget or budget(),
+            max_iterations=max_iterations,
+            output_dir=Path(temp_dir.name) / "run",
+            run_group_id="test-c0",
+        ).run()
+        return outcome, TraceReader(outcome.trace_path).read_all()
+
+    def test_fixture_completes_end_to_end_and_reproduces_egtsr(self) -> None:
+        outcome, events = self.run_with(FixtureProvider())
+        validate_trace(outcome.trace_path, outcome.evidence_path)
+        self.assertEqual(outcome.status, EvaluationStatus.EVAL_VALID)
+        self.assertEqual(outcome.metrics.evaluation_scope.value, "fixture")
+        self.assertTrue(outcome.metrics.task_success)
+        self.assertEqual(outcome.metrics.required_claim_coverage, 1.0)
+        self.assertEqual(outcome.metrics.citation_precision, 1.0)
+        self.assertEqual(len(events), 18)
+        self.assertEqual(
+            sum(event.event_type == "model_call" for event in events),
+            6,
+        )
+        self.assertEqual(
+            sum(event.event_type == "tool_execution" for event in events),
+            6,
+        )
+        self.assertTrue(outcome.report_path and outcome.report_path.exists())
+
+    def test_iteration_budget_exhaustion_is_agent_failure_with_valid_trace(self) -> None:
+        outcome, events = self.run_with(
+            FixtureProvider(),
+            run_budget=budget(max_model_calls=3),
+            max_iterations=3,
+        )
+        validate_trace(outcome.trace_path, outcome.evidence_path)
+        self.assertEqual(outcome.status, EvaluationStatus.AGENT_FAILED)
+        self.assertEqual(outcome.failure_label, "budget_exhausted:max_iterations")
+        self.assertTrue(outcome.metrics.included_in_egtsr_denominator)
+        self.assertFalse(outcome.metrics.task_success)
+        self.assertFalse(any(event.event_type == "final_report" for event in events))
+
+    def test_missing_tool_call_is_scored_agent_failure(self) -> None:
+        outcome, _ = self.run_with(StaticProvider(completion()))
+        self.assertEqual(outcome.status, EvaluationStatus.AGENT_FAILED)
+        self.assertEqual(
+            outcome.failure_label,
+            "output_format_failure:missing_tool_call",
+        )
+        self.assertTrue(outcome.metrics.included_in_egtsr_denominator)
+
+    def test_provider_exception_is_excluded_infrastructure_failure(self) -> None:
+        outcome, events = self.run_with(
+            StaticProvider(error=ConnectionError("offline"))
+        )
+        self.assertEqual(outcome.status, EvaluationStatus.INFRA_API_FAILED)
+        self.assertFalse(outcome.metrics.included_in_egtsr_denominator)
+        model_event = next(
+            event for event in events if isinstance(event, ModelCallEvent)
+        )
+        self.assertEqual(model_event.status, CallStatus.ERROR)
+        self.assertEqual(model_event.error_type, "ConnectionError")
+
+    def test_identity_mismatch_is_excluded_and_trace_remains_valid(self) -> None:
+        outcome, events = self.run_with(
+            StaticProvider(completion(model="silently-substituted-model"))
+        )
+        validate_trace(outcome.trace_path, outcome.evidence_path)
+        self.assertEqual(outcome.status, EvaluationStatus.INFRA_API_FAILED)
+        self.assertEqual(outcome.failure_label, "model_identity_mismatch")
+        model_event = next(
+            event for event in events if isinstance(event, ModelCallEvent)
+        )
+        self.assertEqual(model_event.returned_model, "silently-substituted-model")
+        self.assertEqual(model_event.error_type, "ModelIdentityError")
+
+    def test_protocol_failure_accounts_partial_usage_and_cost(self) -> None:
+        partial = completion(cost=Decimal("0.25"))
+        error = ModelProtocolError(
+            "invalid tool JSON",
+            partial_completion=partial,
+        )
+        outcome, events = self.run_with(StaticProvider(error=error))
+        self.assertEqual(outcome.status, EvaluationStatus.AGENT_FAILED)
+        self.assertEqual(outcome.metrics.total_cost_usd, Decimal("0.25"))
+        model_event = next(
+            event for event in events if isinstance(event, ModelCallEvent)
+        )
+        self.assertEqual(model_event.usage.input_tokens, 10)
+
+    def test_finalize_must_be_the_only_tool_call(self) -> None:
+        response = completion(
+            tool_calls=[
+                ToolCallRequest(
+                    id="final",
+                    name="finalize",
+                    arguments={
+                        "summary": "done",
+                        "evidence_ids": [
+                            "00000000-0000-0000-0000-000000000001"
+                        ],
+                    },
+                ),
+                ToolCallRequest(
+                    id="search",
+                    name="search_sources",
+                    arguments={"query": "memory"},
+                ),
+            ]
+        )
+        outcome, _ = self.run_with(StaticProvider(response))
+        self.assertEqual(
+            outcome.failure_label,
+            "output_format_failure:finalize_must_be_only_call",
+        )
+
+    def test_real_task_completion_is_judge_pending_not_scored_success(self) -> None:
+        self.task = self.task.model_copy(
+            update={
+                "fixture_only": False,
+                "evaluation_mode": EvaluationMode.JUDGE_REQUIRED,
+            }
+        )
+        outcome, _ = self.run_with(FixtureProvider())
+        self.assertEqual(outcome.status, EvaluationStatus.JUDGE_REQUIRED)
+        self.assertEqual(outcome.metrics.evaluation_scope.value, "development")
+        self.assertEqual(outcome.failure_label, "judge_pending")
+        self.assertFalse(outcome.metrics.included_in_egtsr_denominator)
+        self.assertIsNone(outcome.metrics.task_success)
+
+
+class TaskContractTests(TestCase):
+    def test_fixture_task_and_snapshot_are_valid(self) -> None:
+        task = load_task(TASK_PATH)
+        corpus = SnapshotCorpus(MANIFEST_PATH)
+        corpus.verify_all()
+        self.assertTrue(task.fixture_only)
+        self.assertEqual(len(task.required_claims), 2)
+        self.assertEqual(len(corpus.entries()), 2)
+
+    def test_claim_cannot_reference_task_disallowed_source(self) -> None:
+        payload = json.loads(TASK_PATH.read_text(encoding="utf-8"))
+        payload["required_claims"][0]["acceptable_source_ids"] = ["invented"]
+        with self.assertRaisesRegex(ValueError, "task-disallowed"):
+            BenchmarkTask.model_validate(payload)
+
+    def test_runner_rejects_task_source_missing_from_snapshot(self) -> None:
+        task = load_task(TASK_PATH).model_copy(
+            update={
+                "acceptable_source_ids": [
+                    "src_mem0_docs",
+                    "src_mem0_paper",
+                    "missing-source",
+                ]
+            }
+        )
+        with TemporaryDirectory() as temp_dir:
+            with self.assertRaisesRegex(ValueError, "missing from snapshot"):
+                C0Runner(
+                    task=task,
+                    corpus=SnapshotCorpus(MANIFEST_PATH),
+                    provider=FixtureProvider(),
+                    budget=budget(),
+                    max_iterations=10,
+                    output_dir=Path(temp_dir) / "run",
+                    run_group_id="test-c0",
+                )
+
+
+class DeepSeekAdapterTests(TestCase):
+    def test_usage_cache_and_versioned_pricing_are_normalized(self) -> None:
+        response = SimpleNamespace(
+            model="deepseek-v4-flash",
+            id="response-1",
+            _request_id="request-1",
+            system_fingerprint="fp-test",
+            usage={
+                "prompt_tokens": 100,
+                "completion_tokens": 20,
+                "prompt_cache_hit_tokens": 40,
+                "prompt_cache_miss_tokens": 60,
+            },
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content=None,
+                        tool_calls=[
+                            SimpleNamespace(
+                                id="call-1",
+                                function=SimpleNamespace(
+                                    name="search_sources",
+                                    arguments='{"query":"memory"}',
+                                ),
+                            )
+                        ],
+                    )
+                )
+            ],
+        )
+        requests = []
+
+        def create(**kwargs):
+            requests.append(kwargs)
+            return response
+
+        completions = SimpleNamespace(create=create)
+        client = SimpleNamespace(chat=SimpleNamespace(completions=completions))
+        provider = DeepSeekProvider(
+            pricing=TokenPricing(
+                pricing_version="official-2026-06-21",
+                uncached_input_usd_per_million=Decimal("2"),
+                cache_hit_input_usd_per_million=Decimal("1"),
+                output_usd_per_million=Decimal("3"),
+            ),
+            client=client,
+        )
+        result = provider.complete(
+            [ChatMessage(role="user", content="research memory")],
+            [],
+            max_output_tokens=10,
+        )
+        self.assertEqual(result.usage.cache_hit_tokens, 40)
+        self.assertEqual(result.cost.input_usd, Decimal("0.00012"))
+        self.assertEqual(result.cost.cache_usd, Decimal("0.00004"))
+        self.assertEqual(result.cost.output_usd, Decimal("0.00006"))
+        self.assertEqual(requests[0]["max_tokens"], 10)
+
+    def test_bad_cache_accounting_is_a_protocol_failure_with_partial_usage(self) -> None:
+        response = SimpleNamespace(
+            model="deepseek-v4-flash",
+            id="response-1",
+            _request_id="request-1",
+            system_fingerprint="fp-test",
+            usage={
+                "prompt_tokens": 100,
+                "completion_tokens": 20,
+                "prompt_cache_hit_tokens": 40,
+                "prompt_cache_miss_tokens": 40,
+            },
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(content="done", tool_calls=[])
+                )
+            ],
+        )
+        client = SimpleNamespace(
+            chat=SimpleNamespace(
+                completions=SimpleNamespace(create=lambda **kwargs: response)
+            )
+        )
+        provider = DeepSeekProvider(
+            pricing=TokenPricing(
+                pricing_version="official-2026-06-21",
+                uncached_input_usd_per_million=Decimal("2"),
+                cache_hit_input_usd_per_million=Decimal("1"),
+                output_usd_per_million=Decimal("3"),
+            ),
+            client=client,
+        )
+        with self.assertRaises(ModelProtocolError) as context:
+            provider.complete(
+                [ChatMessage(role="user", content="research memory")],
+                [],
+                max_output_tokens=10,
+            )
+        self.assertIsNotNone(context.exception.partial_completion)
+        self.assertEqual(
+            context.exception.partial_completion.usage.input_tokens,
+            100,
+        )

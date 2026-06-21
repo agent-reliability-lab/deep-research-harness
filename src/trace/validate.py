@@ -89,7 +89,8 @@ def validate_trace(
                         f"run pinned {start.requested_model}"
                     )
                 if (
-                    event.returned_model is not None
+                    event.status.value == "success"
+                    and event.returned_model is not None
                     and event.returned_model != start.requested_model
                 ):
                     problems.append(

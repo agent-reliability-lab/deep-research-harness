@@ -1,0 +1,58 @@
+{
+  "schema_version": "0.1.0",
+  "task_id": "fixture-mem0-architecture",
+  "family": "architecture_comparison",
+  "prompt": "Using only the frozen sources, explain Mem0's base memory storage and its optional graph capability. Cite evidence for both claims.",
+  "fixture_only": true,
+  "evaluation_mode": "deterministic_fixture",
+  "required_claims": [
+    {
+      "claim_id": "vector-store",
+      "description": "Mem0 stores memories in a vector store.",
+      "acceptable_source_ids": [
+        "src_mem0_docs"
+      ],
+      "evidence_patterns": [
+        "stores memories in a vector store"
+      ],
+      "answer_patterns": [
+        "stores memories in a vector store"
+      ]
+    },
+    {
+      "claim_id": "optional-graph",
+      "description": "Mem0 can add an optional graph layer.",
+      "acceptable_source_ids": [
+        "src_mem0_paper"
+      ],
+      "evidence_patterns": [
+        "can add an optional graph layer"
+      ],
+      "answer_patterns": [
+        "can add an optional graph layer"
+      ]
+    }
+  ],
+  "acceptable_source_ids": [
+    "src_mem0_docs",
+    "src_mem0_paper"
+  ],
+  "known_distractors": [
+    "graph layer is mandatory",
+    "relational database"
+  ],
+  "required_comparison_dimensions": [
+    "base storage",
+    "optional graph capability"
+  ],
+  "citation_expectations": {
+    "minimum_citations": 2,
+    "minimum_unique_sources": 2
+  },
+  "rubric": {
+    "minimum_required_claim_coverage": 1.0,
+    "minimum_citation_precision": 1.0,
+    "minimum_citation_entailment": 1.0,
+    "maximum_distractor_mentions": 0
+  }
+}

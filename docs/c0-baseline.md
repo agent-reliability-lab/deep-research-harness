@@ -1,0 +1,76 @@
+# C0 baseline
+
+C0 is a single-agent ReAct loop with a full running transcript. It adds no
+compaction, permission gate, sub-agent, checkpoint, or recovery behavior.
+
+## Offline integration fixture
+
+Run the committed synthetic corpus and task:
+
+```bash
+python -m src.agent.cli fixture --output "$(mktemp -d)/c0-fixture"
+```
+
+The fixture reuses the two synthetic source statements from G3. It is committed
+because it contains no third-party text. A successful run emits:
+
+```text
+run_started
+  -> model_call / tool_execution
+  -> evidence_recorded
+  -> model_call / tool_execution
+  -> final_report
+  -> evaluation
+  -> run_ended
+```
+
+Every model and tool call is present in `trace.jsonl`; evidence is stored in
+`evidence.jsonl`; the report is under `artifacts/`.
+
+The printed EGTSR is an integration-fixture result only. The CLI always reports
+`evaluation_scope: fixture` and `eligible_for_primary_egtsr: false`. The metrics
+aggregator rejects mixed scopes, so fixture traces cannot silently contaminate
+primary results.
+
+## Budget termination
+
+C0 fails closed on:
+
+- maximum iterations;
+- model-call and tool-call counts;
+- input and output tokens;
+- total model cost;
+- elapsed duration.
+
+A provider/network failure is `infra_api_failed` and excluded from the EGTSR
+denominator. Invalid model protocol, missing tool use, tool failure, and budget
+exhaustion are `agent_failed` and remain in the denominator.
+
+## Official DeepSeek development run
+
+Live runs require a pricing file so cost accounting and the cost budget cannot
+silently degrade to zero. Obtain current prices from the official provider and
+record the retrieval date:
+
+```json
+{
+  "pricing_version": "deepseek-official-YYYY-MM-DD",
+  "uncached_input_usd_per_million": "<decimal>",
+  "cache_hit_input_usd_per_million": "<decimal>",
+  "output_usd_per_million": "<decimal>"
+}
+```
+
+After replacing the placeholders with numeric JSON values:
+
+```bash
+python -m src.agent.cli deepseek \
+  --task data/fixtures/tasks/mem0-architecture.json \
+  --manifest data/fixtures/source_snapshots/manifest.json \
+  --pricing-file /path/to/deepseek-pricing.json \
+  --output "$(mktemp -d)/c0-deepseek"
+```
+
+This is still a fixture run. It is useful for integration testing with the real
+endpoint, but it is not a primary scored run. G4 and the real frozen corpus must
+be complete before primary results enter the denominator.

@@ -26,6 +26,7 @@ from src.trace.models import (
     CheckpointState,
     Configuration,
     EvaluationEvent,
+    EvaluationScope,
     EvaluationStatus,
     EvidenceRecordedEvent,
     FinalReportEvent,
@@ -386,6 +387,16 @@ class MetricsTests(TestCase):
         self.assertEqual(aggregate.egtsr, 0.5)
         self.assertEqual(aggregate.cost_per_success_usd, Decimal("0.0062"))
 
+    def test_mixed_evaluation_scopes_cannot_be_aggregated(self) -> None:
+        primary = compute_run_metrics(successful_trace(uuid4(), uuid4()))
+        fixture_events = successful_trace(uuid4(), uuid4())
+        fixture_events[0] = fixture_events[0].model_copy(
+            update={"evaluation_scope": EvaluationScope.FIXTURE}
+        )
+        fixture = compute_run_metrics(fixture_events)
+        with self.assertRaisesRegex(ValueError, "mixed evaluation scopes"):
+            aggregate_run_metrics([primary, fixture])
+
 
 class SchemaAndCliTests(TestCase):
     def test_exported_schemas_are_valid_draft_2020_12(self) -> None:
@@ -394,6 +405,8 @@ class SchemaAndCliTests(TestCase):
             "trace-event.schema.json",
             "evidence-record.schema.json",
             "snapshot-manifest.schema.json",
+            "benchmark-task.schema.json",
+            "token-pricing.schema.json",
         ):
             schema = json.loads((root / "schemas" / filename).read_text())
             Draft202012Validator.check_schema(schema)

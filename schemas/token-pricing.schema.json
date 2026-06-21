@@ -1,0 +1,57 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "pricing_version": {
+      "minLength": 1,
+      "title": "Pricing Version",
+      "type": "string"
+    },
+    "uncached_input_usd_per_million": {
+      "anyOf": [
+        {
+          "minimum": 0.0,
+          "type": "number"
+        },
+        {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "type": "string"
+        }
+      ],
+      "title": "Uncached Input Usd Per Million"
+    },
+    "cache_hit_input_usd_per_million": {
+      "anyOf": [
+        {
+          "minimum": 0.0,
+          "type": "number"
+        },
+        {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "type": "string"
+        }
+      ],
+      "title": "Cache Hit Input Usd Per Million"
+    },
+    "output_usd_per_million": {
+      "anyOf": [
+        {
+          "minimum": 0.0,
+          "type": "number"
+        },
+        {
+          "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+          "type": "string"
+        }
+      ],
+      "title": "Output Usd Per Million"
+    }
+  },
+  "required": [
+    "pricing_version",
+    "uncached_input_usd_per_million",
+    "cache_hit_input_usd_per_million",
+    "output_usd_per_million"
+  ],
+  "title": "TokenPricing",
+  "type": "object"
+}

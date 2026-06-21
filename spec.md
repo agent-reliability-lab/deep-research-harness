@@ -238,6 +238,14 @@ Each task receives:
 - citation expectations;
 - a scoring rubric.
 
+The machine-readable task contract is exported as
+`schemas/benchmark-task.schema.json`. Synthetic integration fixtures use the
+`deterministic_fixture` evaluator and are never eligible for the primary
+headline metric. Real benchmark tasks use `judge_required` until the evaluation
+pipeline records a scored result. Every run records an `evaluation_scope`, and
+metric aggregation rejects mixed scopes so fixture, development, primary, and
+external-validity traces cannot be pooled accidentally.
+
 The public demo uses the full comparison question. The benchmark uses narrower cases so failures can be attributed.
 
 ## 10. Metrics

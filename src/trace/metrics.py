@@ -12,6 +12,7 @@ from pydantic.main import BaseModel
 from .models import (
     CompactionEvent,
     EvaluationEvent,
+    EvaluationScope,
     ModelCallEvent,
     PermissionDecisionEvent,
     PermissionVerdict,
@@ -29,6 +30,7 @@ class MetricsModel(BaseModel):
 
 class RunMetrics(MetricsModel):
     run_id: UUID
+    evaluation_scope: EvaluationScope
     included_in_egtsr_denominator: bool
     task_success: bool | None
     model_cost_usd: Decimal = Field(ge=0)
@@ -55,6 +57,7 @@ class RunMetrics(MetricsModel):
 
 
 class AggregateMetrics(MetricsModel):
+    evaluation_scope: EvaluationScope | None
     runs: int = Field(ge=0)
     eval_valid_runs: int = Field(ge=0)
     successful_runs: int = Field(ge=0)
@@ -123,6 +126,7 @@ def compute_run_metrics(events: list[TraceEvent]) -> RunMetrics:
 
     return RunMetrics(
         run_id=run_id,
+        evaluation_scope=events[0].evaluation_scope,
         included_in_egtsr_denominator=evaluation.included_in_egtsr_denominator,
         task_success=evaluation.task_success,
         model_cost_usd=model_cost,
@@ -171,6 +175,12 @@ def compute_run_metrics(events: list[TraceEvent]) -> RunMetrics:
 
 def aggregate_run_metrics(metrics: Iterable[RunMetrics]) -> AggregateMetrics:
     metrics = list(metrics)
+    scopes = {item.evaluation_scope for item in metrics}
+    if len(scopes) > 1:
+        raise ValueError(
+            "cannot aggregate mixed evaluation scopes: "
+            f"{sorted(scope.value for scope in scopes)}"
+        )
     denominator = [item for item in metrics if item.included_in_egtsr_denominator]
     successes = [item for item in denominator if item.task_success]
     total_cost = sum(
@@ -181,6 +191,7 @@ def aggregate_run_metrics(metrics: Iterable[RunMetrics]) -> AggregateMetrics:
         item.recovery_success for item in denominator if item.recovery_success is not None
     ]
     return AggregateMetrics(
+        evaluation_scope=next(iter(scopes)) if scopes else None,
         runs=len(metrics),
         eval_valid_runs=len(denominator),
         successful_runs=len(successes),

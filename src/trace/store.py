@@ -19,6 +19,7 @@ class TraceWriter:
         self.path = Path(path)
         self.run_id = run_id
         self._next_sequence = 0
+        self._last_event_id: UUID | None = None
         if self.path.exists():
             events = TraceReader(self.path).read_all()
             if events:
@@ -28,10 +29,15 @@ class TraceWriter:
                         f"trace contains run_ids={sorted(map(str, run_ids))}, not run_id={run_id}"
                     )
                 self._next_sequence = events[-1].sequence + 1
+                self._last_event_id = events[-1].event_id
 
     @property
     def next_sequence(self) -> int:
         return self._next_sequence
+
+    @property
+    def last_event_id(self) -> UUID | None:
+        return self._last_event_id
 
     def append(self, event: TraceEvent) -> None:
         if event.run_id != self.run_id:
@@ -47,6 +53,7 @@ class TraceWriter:
             handle.flush()
             os.fsync(handle.fileno())
         self._next_sequence += 1
+        self._last_event_id = event.event_id
 
 
 class TraceReader:

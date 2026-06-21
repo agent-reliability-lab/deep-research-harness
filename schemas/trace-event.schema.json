@@ -524,6 +524,16 @@
       "title": "EvaluationEvent",
       "type": "object"
     },
+    "EvaluationScope": {
+      "enum": [
+        "primary",
+        "external_validity",
+        "development",
+        "fixture"
+      ],
+      "title": "EvaluationScope",
+      "type": "string"
+    },
     "EvaluationStatus": {
       "enum": [
         "eval_valid",
@@ -1329,6 +1339,10 @@
         },
         "configuration": {
           "$ref": "#/$defs/Configuration"
+        },
+        "evaluation_scope": {
+          "$ref": "#/$defs/EvaluationScope",
+          "default": "primary"
         },
         "provider": {
           "minLength": 1,

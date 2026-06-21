@@ -23,6 +23,13 @@ class Configuration(StrEnum):
     C3 = "C3"
 
 
+class EvaluationScope(StrEnum):
+    PRIMARY = "primary"
+    EXTERNAL_VALIDITY = "external_validity"
+    DEVELOPMENT = "development"
+    FIXTURE = "fixture"
+
+
 class EvaluationStatus(StrEnum):
     EVAL_VALID = "eval_valid"
     AGENT_FAILED = "agent_failed"
@@ -112,6 +119,7 @@ class RunStartedEvent(EventBase):
     run_group_id: str = Field(min_length=1)
     task_id: str = Field(min_length=1)
     configuration: Configuration
+    evaluation_scope: EvaluationScope = EvaluationScope.PRIMARY
     provider: str = Field(min_length=1)
     endpoint_class: str = Field(min_length=1)
     requested_model: str = Field(min_length=1)

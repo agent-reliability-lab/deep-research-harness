@@ -5,8 +5,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from src.agent.deepseek import TokenPricing
 from src.evidence.models import EvidenceRecord
 from src.snapshots.models import SnapshotManifest
+from src.tasks.models import BenchmarkTask
 
 from .models import TRACE_EVENT_ADAPTER
 
@@ -20,6 +22,8 @@ def main() -> None:
         "trace-event.schema.json": TRACE_EVENT_ADAPTER.json_schema(),
         "evidence-record.schema.json": EvidenceRecord.model_json_schema(),
         "snapshot-manifest.schema.json": SnapshotManifest.model_json_schema(),
+        "benchmark-task.schema.json": BenchmarkTask.model_json_schema(),
+        "token-pricing.schema.json": TokenPricing.model_json_schema(),
     }
     for filename, schema in schemas.items():
         path = SCHEMA_DIR / filename

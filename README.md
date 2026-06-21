@@ -75,12 +75,27 @@ Infrastructure failures, source failures, expected policy blocks, and agent fail
 - [x] DeepSeek G1–G3 probes executed and recorded
 - [x] Trace and evidence contracts implemented
 - [x] Frozen snapshot and canonical tool interface implemented
+- [x] C0 ReAct loop implemented and validated against a synthetic fixture
 - [ ] DeepSeek G4 stability soak completed
-- [ ] C0 baseline implemented
+- [ ] C0 primary-provider run completed after G4
 - [ ] 80-run primary matrix completed
 - [ ] 32-run external-validity subset completed
 
 Read the full [product and evaluation specification](spec.md).
+
+## Run the C0 fixture
+
+The committed fixture is synthetic, offline, and deliberately excluded from
+the primary experiment. It proves the loop, budget enforcement, trace, evidence,
+final report, and metric path in one command:
+
+```bash
+python -m src.agent.cli fixture --output "$(mktemp -d)/c0-fixture"
+```
+
+The command prints a fixture-only EGTSR and
+`"eligible_for_primary_egtsr": false`. See
+[C0 baseline usage and limits](docs/c0-baseline.md).
 
 ## Planned repository shape
 
@@ -98,6 +113,7 @@ deep-research-harness/
 │   ├── evidence/
 │   ├── harness/
 │   ├── snapshots/
+│   ├── tasks/
 │   ├── trace/
 │   ├── tools/
 │   └── evals/

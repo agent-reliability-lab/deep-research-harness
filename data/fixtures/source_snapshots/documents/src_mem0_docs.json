@@ -1,0 +1,5 @@
+{
+  "schema_version": "0.1.0",
+  "source_id": "src_mem0_docs",
+  "cleaned_text": "Mem0 stores memories in a vector store."
+}

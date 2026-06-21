@@ -1,0 +1,35 @@
+{
+  "schema_version": "0.1.0",
+  "snapshot_id": "g3-synthetic-memory-fixture-v1",
+  "created_at": "2026-06-21T00:00:00Z",
+  "sources": [
+    {
+      "source_id": "src_mem0_docs",
+      "title": "Synthetic Mem0 Documentation Fixture",
+      "canonical_url": "https://example.invalid/fixtures/mem0-docs",
+      "retrieved_at": "2026-06-21T00:00:00Z",
+      "content_hash": "sha256:83359ccefad2d5f21dea4bec097ae01bc2eaa9450e0390dd7c6479ea4254b517",
+      "excerpt": "Mem0 stores memories in a vector store.",
+      "source_type": "synthetic_fixture",
+      "version_or_pub_date": "2026-06-21",
+      "redistribution_policy": "redistributable",
+      "cache_relpath": "documents/src_mem0_docs.json",
+      "language": "en",
+      "license": "CC0-1.0"
+    },
+    {
+      "source_id": "src_mem0_paper",
+      "title": "Synthetic Mem0 Paper Fixture",
+      "canonical_url": "https://example.invalid/fixtures/mem0-paper",
+      "retrieved_at": "2026-06-21T00:00:00Z",
+      "content_hash": "sha256:b35336170dbc9b6603004899ad1bc0aa33616f0bf3aa4592263b09237dda2417",
+      "excerpt": "Mem0 can add an optional graph layer.",
+      "source_type": "synthetic_fixture",
+      "version_or_pub_date": "2026-06-21",
+      "redistribution_policy": "redistributable",
+      "cache_relpath": "documents/src_mem0_paper.json",
+      "language": "en",
+      "license": "CC0-1.0"
+    }
+  ]
+}

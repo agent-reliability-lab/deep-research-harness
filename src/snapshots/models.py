@@ -14,6 +14,7 @@ class StrictModel(BaseModel):
 
 
 class SourceType(StrEnum):
+    SYNTHETIC_FIXTURE = "synthetic_fixture"
     OFFICIAL_DOCS = "official_docs"
     OFFICIAL_REPOSITORY = "official_repository"
     RESEARCH_PAPER = "research_paper"

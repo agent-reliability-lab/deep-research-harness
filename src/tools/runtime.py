@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import time
+from collections.abc import Callable
 from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
@@ -38,6 +39,7 @@ class ToolRuntime:
         trace: TraceWriter,
         evidence: EvidenceStore,
         artifact_dir: str | Path,
+        within_budget: Callable[[], bool] | None = None,
     ) -> None:
         if trace.run_id != run_id:
             raise ValueError("trace writer run_id does not match tool runtime")
@@ -46,6 +48,7 @@ class ToolRuntime:
         self.trace = trace
         self.evidence = evidence
         self.artifact_dir = Path(artifact_dir)
+        self.within_budget = within_budget or (lambda: True)
         documents = {
             entry.source_id: corpus.document(entry.source_id).cleaned_text
             for entry in corpus.entries()
@@ -313,7 +316,7 @@ class ToolRuntime:
                 cited_evidence_ids=[
                     UUID(item) for item in result["evidence_ids"]
                 ],
-                produced_within_budget=True,
+                produced_within_budget=self.within_budget(),
             )
             self.trace.append(final_event)
 

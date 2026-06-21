@@ -1,0 +1,207 @@
+{
+  "$defs": {
+    "CitationExpectations": {
+      "additionalProperties": false,
+      "properties": {
+        "minimum_citations": {
+          "minimum": 1,
+          "title": "Minimum Citations",
+          "type": "integer"
+        },
+        "minimum_unique_sources": {
+          "minimum": 1,
+          "title": "Minimum Unique Sources",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "minimum_citations",
+        "minimum_unique_sources"
+      ],
+      "title": "CitationExpectations",
+      "type": "object"
+    },
+    "EvaluationMode": {
+      "enum": [
+        "deterministic_fixture",
+        "judge_required"
+      ],
+      "title": "EvaluationMode",
+      "type": "string"
+    },
+    "RequiredClaim": {
+      "additionalProperties": false,
+      "properties": {
+        "claim_id": {
+          "minLength": 1,
+          "pattern": "^[a-z0-9][a-z0-9._-]*$",
+          "title": "Claim Id",
+          "type": "string"
+        },
+        "description": {
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "acceptable_source_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Acceptable Source Ids",
+          "type": "array"
+        },
+        "evidence_patterns": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence Patterns",
+          "type": "array"
+        },
+        "answer_patterns": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Answer Patterns",
+          "type": "array"
+        }
+      },
+      "required": [
+        "claim_id",
+        "description",
+        "acceptable_source_ids",
+        "evidence_patterns",
+        "answer_patterns"
+      ],
+      "title": "RequiredClaim",
+      "type": "object"
+    },
+    "TaskFamily": {
+      "enum": [
+        "architecture_comparison",
+        "memory_lifecycle",
+        "retrieval_ranking",
+        "operations",
+        "product_recommendation"
+      ],
+      "title": "TaskFamily",
+      "type": "string"
+    },
+    "TaskRubric": {
+      "additionalProperties": false,
+      "properties": {
+        "minimum_required_claim_coverage": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Minimum Required Claim Coverage",
+          "type": "number"
+        },
+        "minimum_citation_precision": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Minimum Citation Precision",
+          "type": "number"
+        },
+        "minimum_citation_entailment": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Minimum Citation Entailment",
+          "type": "number"
+        },
+        "maximum_distractor_mentions": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Maximum Distractor Mentions",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "minimum_required_claim_coverage",
+        "minimum_citation_precision",
+        "minimum_citation_entailment"
+      ],
+      "title": "TaskRubric",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "0.1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "task_id": {
+      "minLength": 1,
+      "pattern": "^[a-z0-9][a-z0-9._-]*$",
+      "title": "Task Id",
+      "type": "string"
+    },
+    "family": {
+      "$ref": "#/$defs/TaskFamily"
+    },
+    "prompt": {
+      "minLength": 1,
+      "title": "Prompt",
+      "type": "string"
+    },
+    "fixture_only": {
+      "title": "Fixture Only",
+      "type": "boolean"
+    },
+    "evaluation_mode": {
+      "$ref": "#/$defs/EvaluationMode"
+    },
+    "required_claims": {
+      "items": {
+        "$ref": "#/$defs/RequiredClaim"
+      },
+      "minItems": 1,
+      "title": "Required Claims",
+      "type": "array"
+    },
+    "acceptable_source_ids": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Acceptable Source Ids",
+      "type": "array"
+    },
+    "known_distractors": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Known Distractors",
+      "type": "array"
+    },
+    "required_comparison_dimensions": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Required Comparison Dimensions",
+      "type": "array"
+    },
+    "citation_expectations": {
+      "$ref": "#/$defs/CitationExpectations"
+    },
+    "rubric": {
+      "$ref": "#/$defs/TaskRubric"
+    }
+  },
+  "required": [
+    "task_id",
+    "family",
+    "prompt",
+    "fixture_only",
+    "evaluation_mode",
+    "required_claims",
+    "acceptable_source_ids",
+    "citation_expectations",
+    "rubric"
+  ],
+  "title": "BenchmarkTask",
+  "type": "object"
+}
