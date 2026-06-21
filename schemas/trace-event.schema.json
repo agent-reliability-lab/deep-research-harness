@@ -1,0 +1,1748 @@
+{
+  "$defs": {
+    "CallCost": {
+      "additionalProperties": false,
+      "properties": {
+        "input_usd": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            }
+          ],
+          "default": "0",
+          "title": "Input Usd"
+        },
+        "output_usd": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            }
+          ],
+          "default": "0",
+          "title": "Output Usd"
+        },
+        "cache_usd": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            }
+          ],
+          "default": "0",
+          "title": "Cache Usd"
+        }
+      },
+      "title": "CallCost",
+      "type": "object"
+    },
+    "CallStatus": {
+      "enum": [
+        "success",
+        "error"
+      ],
+      "title": "CallStatus",
+      "type": "string"
+    },
+    "ChatMessage": {
+      "additionalProperties": false,
+      "properties": {
+        "role": {
+          "enum": [
+            "system",
+            "user",
+            "assistant",
+            "tool"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "content": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Content"
+        },
+        "tool_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tool Call Id"
+        },
+        "tool_calls": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/ToolCallRequest"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tool Calls"
+        }
+      },
+      "required": [
+        "role"
+      ],
+      "title": "ChatMessage",
+      "type": "object"
+    },
+    "CheckpointEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "default": "0.1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "run_id": {
+          "format": "uuid",
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "actor_id": {
+          "default": "main",
+          "minLength": 1,
+          "title": "Actor Id",
+          "type": "string"
+        },
+        "parent_event_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Event Id"
+        },
+        "event_type": {
+          "const": "checkpoint",
+          "default": "checkpoint",
+          "title": "Event Type",
+          "type": "string"
+        },
+        "checkpoint_id": {
+          "format": "uuid",
+          "title": "Checkpoint Id",
+          "type": "string"
+        },
+        "state_hash": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "State Hash",
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/$defs/CheckpointState"
+        }
+      },
+      "required": [
+        "run_id",
+        "sequence",
+        "timestamp",
+        "state_hash",
+        "state"
+      ],
+      "title": "CheckpointEvent",
+      "type": "object"
+    },
+    "CheckpointState": {
+      "additionalProperties": false,
+      "properties": {
+        "plan": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Plan",
+          "type": "array"
+        },
+        "completed_steps": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Completed Steps",
+          "type": "array"
+        },
+        "unresolved_questions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Unresolved Questions",
+          "type": "array"
+        },
+        "evidence_ids": {
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "source_to_claim": {
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "title": "Source To Claim",
+          "type": "object"
+        },
+        "user_constraints": {
+          "items": {
+            "type": "string"
+          },
+          "title": "User Constraints",
+          "type": "array"
+        },
+        "permission_decision_event_ids": {
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "title": "Permission Decision Event Ids",
+          "type": "array"
+        },
+        "failures": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Failures",
+          "type": "array"
+        },
+        "retry_state": {
+          "additionalProperties": true,
+          "title": "Retry State",
+          "type": "object"
+        }
+      },
+      "required": [
+        "plan",
+        "completed_steps",
+        "unresolved_questions",
+        "evidence_ids",
+        "source_to_claim",
+        "user_constraints",
+        "permission_decision_event_ids",
+        "failures",
+        "retry_state"
+      ],
+      "title": "CheckpointState",
+      "type": "object"
+    },
+    "CompactionEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "default": "0.1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "run_id": {
+          "format": "uuid",
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "actor_id": {
+          "default": "main",
+          "minLength": 1,
+          "title": "Actor Id",
+          "type": "string"
+        },
+        "parent_event_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Event Id"
+        },
+        "event_type": {
+          "const": "compaction",
+          "default": "compaction",
+          "title": "Event Type",
+          "type": "string"
+        },
+        "input_tokens": {
+          "exclusiveMinimum": 0,
+          "title": "Input Tokens",
+          "type": "integer"
+        },
+        "output_tokens": {
+          "minimum": 0,
+          "title": "Output Tokens",
+          "type": "integer"
+        },
+        "preserved_fact_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Preserved Fact Ids",
+          "type": "array"
+        },
+        "required_fact_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Required Fact Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "run_id",
+        "sequence",
+        "timestamp",
+        "input_tokens",
+        "output_tokens"
+      ],
+      "title": "CompactionEvent",
+      "type": "object"
+    },
+    "Configuration": {
+      "enum": [
+        "C0",
+        "C1",
+        "C2",
+        "C3"
+      ],
+      "title": "Configuration",
+      "type": "string"
+    },
+    "EvaluationEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "default": "0.1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "run_id": {
+          "format": "uuid",
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "actor_id": {
+          "default": "main",
+          "minLength": 1,
+          "title": "Actor Id",
+          "type": "string"
+        },
+        "parent_event_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Event Id"
+        },
+        "event_type": {
+          "const": "evaluation",
+          "default": "evaluation",
+          "title": "Event Type",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/EvaluationStatus"
+        },
+        "included_in_egtsr_denominator": {
+          "title": "Included In Egtsr Denominator",
+          "type": "boolean"
+        },
+        "task_success": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Task Success"
+        },
+        "required_claims_total": {
+          "minimum": 0,
+          "title": "Required Claims Total",
+          "type": "integer"
+        },
+        "supported_required_claims": {
+          "minimum": 0,
+          "title": "Supported Required Claims",
+          "type": "integer"
+        },
+        "citations_total": {
+          "minimum": 0,
+          "title": "Citations Total",
+          "type": "integer"
+        },
+        "supported_citations": {
+          "minimum": 0,
+          "title": "Supported Citations",
+          "type": "integer"
+        },
+        "entailed_citations": {
+          "minimum": 0,
+          "title": "Entailed Citations",
+          "type": "integer"
+        },
+        "factual_correctness_passed": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Factual Correctness Passed"
+        },
+        "critical_policy_violations": {
+          "minimum": 0,
+          "title": "Critical Policy Violations",
+          "type": "integer"
+        },
+        "final_artifact_within_budget": {
+          "title": "Final Artifact Within Budget",
+          "type": "boolean"
+        },
+        "unsupported_claim_count": {
+          "minimum": 0,
+          "title": "Unsupported Claim Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "run_id",
+        "sequence",
+        "timestamp",
+        "status",
+        "included_in_egtsr_denominator",
+        "required_claims_total",
+        "supported_required_claims",
+        "citations_total",
+        "supported_citations",
+        "entailed_citations",
+        "critical_policy_violations",
+        "final_artifact_within_budget",
+        "unsupported_claim_count"
+      ],
+      "title": "EvaluationEvent",
+      "type": "object"
+    },
+    "EvaluationStatus": {
+      "enum": [
+        "eval_valid",
+        "agent_failed",
+        "policy_blocked_expected",
+        "infra_api_failed",
+        "source_unavailable",
+        "judge_required"
+      ],
+      "title": "EvaluationStatus",
+      "type": "string"
+    },
+    "EvidenceRecordedEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "default": "0.1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "run_id": {
+          "format": "uuid",
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "actor_id": {
+          "default": "main",
+          "minLength": 1,
+          "title": "Actor Id",
+          "type": "string"
+        },
+        "parent_event_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Event Id"
+        },
+        "event_type": {
+          "const": "evidence_recorded",
+          "default": "evidence_recorded",
+          "title": "Event Type",
+          "type": "string"
+        },
+        "evidence_id": {
+          "format": "uuid",
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "source_id": {
+          "minLength": 1,
+          "title": "Source Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "run_id",
+        "sequence",
+        "timestamp",
+        "evidence_id",
+        "source_id"
+      ],
+      "title": "EvidenceRecordedEvent",
+      "type": "object"
+    },
+    "FinalReportEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "default": "0.1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "run_id": {
+          "format": "uuid",
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "actor_id": {
+          "default": "main",
+          "minLength": 1,
+          "title": "Actor Id",
+          "type": "string"
+        },
+        "parent_event_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Event Id"
+        },
+        "event_type": {
+          "const": "final_report",
+          "default": "final_report",
+          "title": "Event Type",
+          "type": "string"
+        },
+        "artifact_path": {
+          "minLength": 1,
+          "title": "Artifact Path",
+          "type": "string"
+        },
+        "content_hash": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Content Hash",
+          "type": "string"
+        },
+        "cited_evidence_ids": {
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "title": "Cited Evidence Ids",
+          "type": "array"
+        },
+        "produced_within_budget": {
+          "title": "Produced Within Budget",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "run_id",
+        "sequence",
+        "timestamp",
+        "artifact_path",
+        "content_hash",
+        "cited_evidence_ids",
+        "produced_within_budget"
+      ],
+      "title": "FinalReportEvent",
+      "type": "object"
+    },
+    "ModelCallEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "default": "0.1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "run_id": {
+          "format": "uuid",
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "actor_id": {
+          "default": "main",
+          "minLength": 1,
+          "title": "Actor Id",
+          "type": "string"
+        },
+        "parent_event_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Event Id"
+        },
+        "event_type": {
+          "const": "model_call",
+          "default": "model_call",
+          "title": "Event Type",
+          "type": "string"
+        },
+        "call_id": {
+          "minLength": 1,
+          "title": "Call Id",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/CallStatus"
+        },
+        "requested_model": {
+          "minLength": 1,
+          "title": "Requested Model",
+          "type": "string"
+        },
+        "returned_model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Returned Model"
+        },
+        "system_fingerprint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "System Fingerprint"
+        },
+        "provider_request_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Provider Request Id"
+        },
+        "request_messages": {
+          "items": {
+            "$ref": "#/$defs/ChatMessage"
+          },
+          "title": "Request Messages",
+          "type": "array"
+        },
+        "tool_schemas": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Tool Schemas",
+          "type": "array"
+        },
+        "response_content": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Response Content"
+        },
+        "response_tool_calls": {
+          "items": {
+            "$ref": "#/$defs/ToolCallRequest"
+          },
+          "title": "Response Tool Calls",
+          "type": "array"
+        },
+        "usage": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ModelUsage"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "cost": {
+          "$ref": "#/$defs/CallCost"
+        },
+        "latency_ms": {
+          "minimum": 0,
+          "title": "Latency Ms",
+          "type": "integer"
+        },
+        "error_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error Type"
+        },
+        "error_message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error Message"
+        }
+      },
+      "required": [
+        "run_id",
+        "sequence",
+        "timestamp",
+        "call_id",
+        "status",
+        "requested_model",
+        "request_messages",
+        "latency_ms"
+      ],
+      "title": "ModelCallEvent",
+      "type": "object"
+    },
+    "ModelUsage": {
+      "additionalProperties": false,
+      "properties": {
+        "input_tokens": {
+          "minimum": 0,
+          "title": "Input Tokens",
+          "type": "integer"
+        },
+        "output_tokens": {
+          "minimum": 0,
+          "title": "Output Tokens",
+          "type": "integer"
+        },
+        "cache_hit_tokens": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Cache Hit Tokens",
+          "type": "integer"
+        },
+        "cache_miss_tokens": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Cache Miss Tokens",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "input_tokens",
+        "output_tokens"
+      ],
+      "title": "ModelUsage",
+      "type": "object"
+    },
+    "PermissionAction": {
+      "enum": [
+        "allow",
+        "ask",
+        "deny"
+      ],
+      "title": "PermissionAction",
+      "type": "string"
+    },
+    "PermissionDecisionEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "default": "0.1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "run_id": {
+          "format": "uuid",
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "actor_id": {
+          "default": "main",
+          "minLength": 1,
+          "title": "Actor Id",
+          "type": "string"
+        },
+        "parent_event_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Event Id"
+        },
+        "event_type": {
+          "const": "permission_decision",
+          "default": "permission_decision",
+          "title": "Event Type",
+          "type": "string"
+        },
+        "action_name": {
+          "minLength": 1,
+          "title": "Action Name",
+          "type": "string"
+        },
+        "requested_action": {
+          "$ref": "#/$defs/PermissionAction"
+        },
+        "policy_action": {
+          "$ref": "#/$defs/PermissionAction"
+        },
+        "verdict": {
+          "$ref": "#/$defs/PermissionVerdict"
+        },
+        "user_approved": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "User Approved"
+        }
+      },
+      "required": [
+        "run_id",
+        "sequence",
+        "timestamp",
+        "action_name",
+        "requested_action",
+        "policy_action",
+        "verdict"
+      ],
+      "title": "PermissionDecisionEvent",
+      "type": "object"
+    },
+    "PermissionVerdict": {
+      "enum": [
+        "correct_allow",
+        "correct_ask",
+        "correct_deny",
+        "over_block",
+        "under_block"
+      ],
+      "title": "PermissionVerdict",
+      "type": "string"
+    },
+    "RecoveryEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "default": "0.1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "run_id": {
+          "format": "uuid",
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "actor_id": {
+          "default": "main",
+          "minLength": 1,
+          "title": "Actor Id",
+          "type": "string"
+        },
+        "parent_event_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Event Id"
+        },
+        "event_type": {
+          "const": "recovery",
+          "default": "recovery",
+          "title": "Event Type",
+          "type": "string"
+        },
+        "checkpoint_id": {
+          "format": "uuid",
+          "title": "Checkpoint Id",
+          "type": "string"
+        },
+        "restored": {
+          "title": "Restored",
+          "type": "boolean"
+        },
+        "repeated_gated_actions": {
+          "minimum": 0,
+          "title": "Repeated Gated Actions",
+          "type": "integer"
+        },
+        "completed_within_remaining_budget": {
+          "title": "Completed Within Remaining Budget",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "run_id",
+        "sequence",
+        "timestamp",
+        "checkpoint_id",
+        "restored",
+        "repeated_gated_actions",
+        "completed_within_remaining_budget"
+      ],
+      "title": "RecoveryEvent",
+      "type": "object"
+    },
+    "RunBudget": {
+      "additionalProperties": false,
+      "properties": {
+        "max_model_calls": {
+          "exclusiveMinimum": 0,
+          "title": "Max Model Calls",
+          "type": "integer"
+        },
+        "max_tool_calls": {
+          "exclusiveMinimum": 0,
+          "title": "Max Tool Calls",
+          "type": "integer"
+        },
+        "max_input_tokens": {
+          "exclusiveMinimum": 0,
+          "title": "Max Input Tokens",
+          "type": "integer"
+        },
+        "max_output_tokens": {
+          "exclusiveMinimum": 0,
+          "title": "Max Output Tokens",
+          "type": "integer"
+        },
+        "max_cost_usd": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            }
+          ],
+          "title": "Max Cost Usd"
+        },
+        "max_duration_ms": {
+          "exclusiveMinimum": 0,
+          "title": "Max Duration Ms",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "max_model_calls",
+        "max_tool_calls",
+        "max_input_tokens",
+        "max_output_tokens",
+        "max_cost_usd",
+        "max_duration_ms"
+      ],
+      "title": "RunBudget",
+      "type": "object"
+    },
+    "RunEndedEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "default": "0.1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "run_id": {
+          "format": "uuid",
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "actor_id": {
+          "default": "main",
+          "minLength": 1,
+          "title": "Actor Id",
+          "type": "string"
+        },
+        "parent_event_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Event Id"
+        },
+        "event_type": {
+          "const": "run_ended",
+          "default": "run_ended",
+          "title": "Event Type",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/EvaluationStatus"
+        },
+        "duration_ms": {
+          "minimum": 0,
+          "title": "Duration Ms",
+          "type": "integer"
+        },
+        "failure_label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Failure Label"
+        }
+      },
+      "required": [
+        "run_id",
+        "sequence",
+        "timestamp",
+        "status",
+        "duration_ms"
+      ],
+      "title": "RunEndedEvent",
+      "type": "object"
+    },
+    "RunStartedEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "default": "0.1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "run_id": {
+          "format": "uuid",
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "actor_id": {
+          "default": "main",
+          "minLength": 1,
+          "title": "Actor Id",
+          "type": "string"
+        },
+        "parent_event_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Event Id"
+        },
+        "event_type": {
+          "const": "run_started",
+          "default": "run_started",
+          "title": "Event Type",
+          "type": "string"
+        },
+        "run_group_id": {
+          "minLength": 1,
+          "title": "Run Group Id",
+          "type": "string"
+        },
+        "task_id": {
+          "minLength": 1,
+          "title": "Task Id",
+          "type": "string"
+        },
+        "configuration": {
+          "$ref": "#/$defs/Configuration"
+        },
+        "provider": {
+          "minLength": 1,
+          "title": "Provider",
+          "type": "string"
+        },
+        "endpoint_class": {
+          "minLength": 1,
+          "title": "Endpoint Class",
+          "type": "string"
+        },
+        "requested_model": {
+          "minLength": 1,
+          "title": "Requested Model",
+          "type": "string"
+        },
+        "model_parameters": {
+          "additionalProperties": true,
+          "title": "Model Parameters",
+          "type": "object"
+        },
+        "source_snapshot_id": {
+          "minLength": 1,
+          "title": "Source Snapshot Id",
+          "type": "string"
+        },
+        "pricing_version": {
+          "minLength": 1,
+          "title": "Pricing Version",
+          "type": "string"
+        },
+        "budget": {
+          "$ref": "#/$defs/RunBudget"
+        },
+        "resumed_from_checkpoint_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Resumed From Checkpoint Id"
+        }
+      },
+      "required": [
+        "run_id",
+        "sequence",
+        "timestamp",
+        "run_group_id",
+        "task_id",
+        "configuration",
+        "provider",
+        "endpoint_class",
+        "requested_model",
+        "model_parameters",
+        "source_snapshot_id",
+        "pricing_version",
+        "budget"
+      ],
+      "title": "RunStartedEvent",
+      "type": "object"
+    },
+    "SubagentHandoffEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "default": "0.1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "run_id": {
+          "format": "uuid",
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "actor_id": {
+          "default": "main",
+          "minLength": 1,
+          "title": "Actor Id",
+          "type": "string"
+        },
+        "parent_event_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Event Id"
+        },
+        "event_type": {
+          "const": "subagent_handoff",
+          "default": "subagent_handoff",
+          "title": "Event Type",
+          "type": "string"
+        },
+        "subagent_id": {
+          "minLength": 1,
+          "title": "Subagent Id",
+          "type": "string"
+        },
+        "assigned_question": {
+          "minLength": 1,
+          "title": "Assigned Question",
+          "type": "string"
+        },
+        "conclusion": {
+          "title": "Conclusion",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "confidence": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "contradictions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Contradictions",
+          "type": "array"
+        },
+        "open_questions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Open Questions",
+          "type": "array"
+        },
+        "failed_actions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Failed Actions",
+          "type": "array"
+        },
+        "serialized_bytes": {
+          "minimum": 0,
+          "title": "Serialized Bytes",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "run_id",
+        "sequence",
+        "timestamp",
+        "subagent_id",
+        "assigned_question",
+        "conclusion",
+        "evidence_ids",
+        "confidence",
+        "serialized_bytes"
+      ],
+      "title": "SubagentHandoffEvent",
+      "type": "object"
+    },
+    "ToolCallRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "arguments": {
+          "additionalProperties": true,
+          "title": "Arguments",
+          "type": "object"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "arguments"
+      ],
+      "title": "ToolCallRequest",
+      "type": "object"
+    },
+    "ToolExecutionEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "default": "0.1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "event_id": {
+          "format": "uuid",
+          "title": "Event Id",
+          "type": "string"
+        },
+        "run_id": {
+          "format": "uuid",
+          "title": "Run Id",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "actor_id": {
+          "default": "main",
+          "minLength": 1,
+          "title": "Actor Id",
+          "type": "string"
+        },
+        "parent_event_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Event Id"
+        },
+        "event_type": {
+          "const": "tool_execution",
+          "default": "tool_execution",
+          "title": "Event Type",
+          "type": "string"
+        },
+        "tool_call_id": {
+          "minLength": 1,
+          "title": "Tool Call Id",
+          "type": "string"
+        },
+        "tool_name": {
+          "minLength": 1,
+          "title": "Tool Name",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/CallStatus"
+        },
+        "arguments": {
+          "additionalProperties": true,
+          "title": "Arguments",
+          "type": "object"
+        },
+        "result": {
+          "anyOf": [
+            {},
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Result"
+        },
+        "latency_ms": {
+          "minimum": 0,
+          "title": "Latency Ms",
+          "type": "integer"
+        },
+        "cost_usd": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            }
+          ],
+          "default": "0",
+          "title": "Cost Usd"
+        },
+        "source_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Ids",
+          "type": "array"
+        },
+        "error_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error Type"
+        },
+        "error_message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error Message"
+        }
+      },
+      "required": [
+        "run_id",
+        "sequence",
+        "timestamp",
+        "tool_call_id",
+        "tool_name",
+        "status",
+        "arguments",
+        "latency_ms"
+      ],
+      "title": "ToolExecutionEvent",
+      "type": "object"
+    }
+  },
+  "discriminator": {
+    "mapping": {
+      "checkpoint": "#/$defs/CheckpointEvent",
+      "compaction": "#/$defs/CompactionEvent",
+      "evaluation": "#/$defs/EvaluationEvent",
+      "evidence_recorded": "#/$defs/EvidenceRecordedEvent",
+      "final_report": "#/$defs/FinalReportEvent",
+      "model_call": "#/$defs/ModelCallEvent",
+      "permission_decision": "#/$defs/PermissionDecisionEvent",
+      "recovery": "#/$defs/RecoveryEvent",
+      "run_ended": "#/$defs/RunEndedEvent",
+      "run_started": "#/$defs/RunStartedEvent",
+      "subagent_handoff": "#/$defs/SubagentHandoffEvent",
+      "tool_execution": "#/$defs/ToolExecutionEvent"
+    },
+    "propertyName": "event_type"
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/RunStartedEvent"
+    },
+    {
+      "$ref": "#/$defs/ModelCallEvent"
+    },
+    {
+      "$ref": "#/$defs/ToolExecutionEvent"
+    },
+    {
+      "$ref": "#/$defs/EvidenceRecordedEvent"
+    },
+    {
+      "$ref": "#/$defs/PermissionDecisionEvent"
+    },
+    {
+      "$ref": "#/$defs/CompactionEvent"
+    },
+    {
+      "$ref": "#/$defs/SubagentHandoffEvent"
+    },
+    {
+      "$ref": "#/$defs/CheckpointEvent"
+    },
+    {
+      "$ref": "#/$defs/RecoveryEvent"
+    },
+    {
+      "$ref": "#/$defs/FinalReportEvent"
+    },
+    {
+      "$ref": "#/$defs/EvaluationEvent"
+    },
+    {
+      "$ref": "#/$defs/RunEndedEvent"
+    }
+  ]
+}

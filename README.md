@@ -73,6 +73,7 @@ Infrastructure failures, source failures, expected policy blocks, and agent fail
 - [x] Twenty-task evaluation design defined
 - [x] Provider qualification and exclusion policy defined
 - [x] DeepSeek G1–G3 probes executed and recorded
+- [x] Trace and evidence contracts implemented
 - [ ] DeepSeek G4 stability soak completed
 - [ ] C0 baseline implemented
 - [ ] 80-run primary matrix completed
@@ -93,9 +94,12 @@ deep-research-harness/
 │   └── tasks/
 ├── src/
 │   ├── agent/
+│   ├── evidence/
 │   ├── harness/
+│   ├── trace/
 │   ├── tools/
 │   └── evals/
+├── schemas/
 ├── tests/
 ├── results/
 │   ├── raw/

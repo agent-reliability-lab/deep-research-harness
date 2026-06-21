@@ -1,0 +1,103 @@
+{
+  "additionalProperties": false,
+  "description": "One claim grounded in one frozen source.\n\nThe seven spec-mandated fields are required. ``source_date`` is nullable\nbecause official documentation can be undated, but the key is never absent.",
+  "properties": {
+    "schema_version": {
+      "default": "0.1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "evidence_id": {
+      "format": "uuid",
+      "title": "Evidence Id",
+      "type": "string"
+    },
+    "run_id": {
+      "format": "uuid",
+      "title": "Run Id",
+      "type": "string"
+    },
+    "claim": {
+      "minLength": 1,
+      "title": "Claim",
+      "type": "string"
+    },
+    "source_id": {
+      "minLength": 1,
+      "title": "Source Id",
+      "type": "string"
+    },
+    "source_url": {
+      "format": "uri",
+      "minLength": 1,
+      "title": "Source Url",
+      "type": "string"
+    },
+    "retrieved_at": {
+      "format": "date-time",
+      "title": "Retrieved At",
+      "type": "string"
+    },
+    "evidence_excerpt": {
+      "minLength": 1,
+      "title": "Evidence Excerpt",
+      "type": "string"
+    },
+    "source_date": {
+      "anyOf": [
+        {
+          "format": "date",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Source Date"
+    },
+    "confidence": {
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Confidence",
+      "type": "number"
+    },
+    "source_content_hash": {
+      "anyOf": [
+        {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Source Content Hash"
+    },
+    "created_event_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Created Event Id"
+    }
+  },
+  "required": [
+    "run_id",
+    "claim",
+    "source_id",
+    "source_url",
+    "retrieved_at",
+    "evidence_excerpt",
+    "source_date",
+    "confidence"
+  ],
+  "title": "EvidenceRecord",
+  "type": "object"
+}

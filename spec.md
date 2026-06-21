@@ -478,9 +478,12 @@ deep-research-harness/
 │   └── tasks/
 ├── src/
 │   ├── agent/
+│   ├── evidence/
 │   ├── harness/
+│   ├── trace/
 │   ├── tools/
 │   └── evals/
+├── schemas/
 ├── tests/
 ├── results/
 │   ├── provider-probes/
