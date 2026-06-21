@@ -1,0 +1,611 @@
+{
+  "gate": "g4_stability",
+  "provider": "deepseek",
+  "requested_model": "deepseek-v4-flash",
+  "passed": false,
+  "assertions": [
+    {
+      "name": "exactly_twenty_requests_attempted",
+      "passed": true,
+      "detail": "configured=20 attempted=20"
+    },
+    {
+      "name": "retry_budget_is_zero",
+      "passed": true,
+      "detail": "sdk_max_retries=0 manual_retries=0"
+    },
+    {
+      "name": "non_retried_success_rate_at_least_95_percent",
+      "passed": true,
+      "detail": "successful=20/20 rate=1.000"
+    },
+    {
+      "name": "zero_model_identity_mismatches",
+      "passed": true,
+      "detail": "allowlist=['deepseek-v4-flash'] mismatched_indices=[]"
+    },
+    {
+      "name": "deterministic_output_contract_preserved",
+      "passed": true,
+      "detail": "mismatched_indices=[]"
+    },
+    {
+      "name": "request_ids_recorded_for_every_success",
+      "passed": false,
+      "detail": "missing_indices=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]"
+    },
+    {
+      "name": "usage_recorded_for_every_success",
+      "passed": true,
+      "detail": "missing_indices=[]"
+    }
+  ],
+  "evidence": {
+    "probe_id": "edfc463b-46eb-4fa8-971c-2f24f948f5a7",
+    "request_policy": {
+      "request_count": 20,
+      "minimum_success_rate": 0.95,
+      "interval_seconds": 0.25,
+      "sdk_max_retries": 0,
+      "manual_retries": 0,
+      "timeout_seconds": 120.0,
+      "max_tokens_per_request": 8,
+      "thinking": "disabled"
+    },
+    "summary": {
+      "attempted": 20,
+      "successful": 20,
+      "failed": 0,
+      "non_retried_success_rate": 1.0,
+      "identity_mismatches": 0,
+      "output_contract_mismatches": 0,
+      "missing_request_ids": 20,
+      "missing_usage": 0,
+      "returned_models": {
+        "deepseek-v4-flash": 20
+      },
+      "system_fingerprints": {
+        "fp_8b330d02d0_prod0820_fp8_kvcache_20260402": 20
+      },
+      "error_types": {},
+      "status_codes": {},
+      "observed_rate_limit_headers": [],
+      "latency_ms": {
+        "min": 457,
+        "median": 675,
+        "p95": 913,
+        "max": 940
+      },
+      "duration_ms": 18568
+    },
+    "calls": [
+      {
+        "index": 1,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": null,
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 47,
+          "total_tokens": 48,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 47
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 754
+      },
+      {
+        "index": 2,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": null,
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 47,
+          "total_tokens": 48,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 47
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 522
+      },
+      {
+        "index": 3,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": null,
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 47,
+          "total_tokens": 48,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 47
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 541
+      },
+      {
+        "index": 4,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": null,
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 47,
+          "total_tokens": 48,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 47
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 602
+      },
+      {
+        "index": 5,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": null,
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 47,
+          "total_tokens": 48,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 47
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 852
+      },
+      {
+        "index": 6,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": null,
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 47,
+          "total_tokens": 48,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 47
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 664
+      },
+      {
+        "index": 7,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": null,
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 47,
+          "total_tokens": 48,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 47
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 547
+      },
+      {
+        "index": 8,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": null,
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 47,
+          "total_tokens": 48,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 47
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 457
+      },
+      {
+        "index": 9,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": null,
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 47,
+          "total_tokens": 48,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 47
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 769
+      },
+      {
+        "index": 10,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": null,
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 47,
+          "total_tokens": 48,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 47
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 829
+      },
+      {
+        "index": 11,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": null,
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 47,
+          "total_tokens": 48,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 47
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 631
+      },
+      {
+        "index": 12,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": null,
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 47,
+          "total_tokens": 48,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 47
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 913
+      },
+      {
+        "index": 13,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": null,
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 47,
+          "total_tokens": 48,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 47
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 686
+      },
+      {
+        "index": 14,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": null,
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 47,
+          "total_tokens": 48,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 47
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 594
+      },
+      {
+        "index": 15,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": null,
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 47,
+          "total_tokens": 48,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 47
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 603
+      },
+      {
+        "index": 16,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": null,
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 47,
+          "total_tokens": 48,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 47
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 648
+      },
+      {
+        "index": 17,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": null,
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 47,
+          "total_tokens": 48,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 47
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 752
+      },
+      {
+        "index": 18,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": null,
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 47,
+          "total_tokens": 48,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 47
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 940
+      },
+      {
+        "index": 19,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": null,
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 47,
+          "total_tokens": 48,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 47
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 731
+      },
+      {
+        "index": 20,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": null,
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 47,
+          "total_tokens": 48,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 47
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 722
+      }
+    ]
+  },
+  "runtime": {
+    "git_revision": "c4599d32dbcf97e9dccbb66858ce4fe3996a4c27",
+    "git_dirty": false,
+    "python_version": "3.14.4",
+    "openai_version": "2.43.0"
+  },
+  "timestamp": "20260621T152506.046664Z"
+}
