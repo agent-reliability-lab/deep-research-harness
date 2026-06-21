@@ -9,7 +9,7 @@ eval-valid run**.
 | G1 Identity | `deepseek_g1_identity.py` | Returned `model` is in the allowlist on every call; identity stable; `system_fingerprint` recorded. |
 | G2 Cache accounting | `deepseek_g2_cache.py` | DeepSeek **automatic** prefix cache: a unique prefix is sent three times with settle intervals; the final call reports a larger cache hit; hit + miss reconciles to `prompt_tokens`. |
 | G3 Tool fidelity | `deepseek_g3_tools.py` | Deterministic five-stage fixture: every declared tool type is forced in sequence, one or more parallel calls are allowed per stage, JSON args pass full schema validation, exact `tool_call_id` values round-trip, and the final tool result is accepted. |
-| G4 Stability | _(separate soak, run before eval-valid runs)_ | 20-request soak: zero identity mismatches, ≥95% non-retried success. |
+| G4 Stability | `deepseek_g4_stability.py` | 20 independent requests with SDK/manual retries disabled: zero identity mismatches, ≥95% success, deterministic output, request IDs, usage, latency, and safe rate-limit metadata. |
 
 > DeepSeek uses **automatic** caching (no `cache_control`), so G2 checks
 > `prompt_cache_hit_tokens` / `prompt_cache_miss_tokens`. The Claude/AiHubMix
@@ -30,7 +30,14 @@ python -m src.probes.run_gates
 python -m src.probes.deepseek_g1_identity
 python -m src.probes.deepseek_g2_cache
 python -m src.probes.deepseek_g3_tools
+python -m src.probes.deepseek_g4_stability
 ```
+
+G4 continues after individual request failures so the artifact always contains
+all twenty outcomes. It permits at most one transport failure, but any model
+identity mismatch fails the gate. Fingerprint changes are recorded rather than
+rejected because a legitimate backend rollout may change the fingerprint
+without changing the controlled model.
 
 Each run writes a JSON artifact to `results/provider-probes/deepseek/`. Per the
 gate policy, **failed probes are committed too** — they are evidence, not noise.

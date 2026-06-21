@@ -12,6 +12,8 @@ from src.probes.deepseek_g1_identity import run as run_g1
 from src.probes.deepseek_g2_cache import run as run_g2
 from src.probes.deepseek_g3_tools import TOOLS, _validate_args
 from src.probes.deepseek_g3_tools import run as run_g3
+from src.probes.deepseek_g4_stability import G4_REQUEST_COUNT
+from src.probes.deepseek_g4_stability import run as run_g4
 
 MODEL = "deepseek-v4-flash"
 EVIDENCE_ID_1 = "00000000-0000-0000-0000-000000000001"
@@ -25,10 +27,12 @@ def completion(
     arguments: dict | None = None,
     call_id: str = "call_1",
     usage: dict | None = None,
+    content: str | None = None,
+    request_id: str | None = None,
 ):
     tool_calls = None
     finish_reason = "stop"
-    content = "done"
+    response_content = content if content is not None else "done"
     if tool_name:
         tool_calls = [
             SimpleNamespace(
@@ -40,7 +44,7 @@ def completion(
             )
         ]
         finish_reason = "tool_calls"
-        content = None
+        response_content = None
     return SimpleNamespace(
         model=model,
         system_fingerprint="fp_test",
@@ -49,12 +53,14 @@ def completion(
             SimpleNamespace(
                 finish_reason=finish_reason,
                 message=SimpleNamespace(
-                    content=content,
+                    content=response_content,
                     tool_calls=tool_calls,
                 ),
             )
         ],
-        _request_id=f"req_{call_id}",
+        _request_id=(
+            request_id if request_id is not None else f"req_{call_id}"
+        ),
     )
 
 
@@ -92,7 +98,10 @@ class FakeCompletions:
 
     def create(self, **kwargs):
         self.calls.append(kwargs)
-        return next(self.responses)
+        response = next(self.responses)
+        if isinstance(response, Exception):
+            raise response
+        return response
 
 
 class FakeClient:
@@ -324,6 +333,159 @@ class GateDecisionTests(TestCase):
         ]
         result = run_g3(client=FakeClient(tool_responses))
         self.assertFalse(result.passed)
+
+    def test_g4_passes_at_exactly_nineteen_of_twenty_successes(self) -> None:
+        responses = [
+            completion(
+                content="ok",
+                call_id=f"g4_{index}",
+                usage={"prompt_tokens": 10, "completion_tokens": 1},
+            )
+            for index in range(G4_REQUEST_COUNT - 1)
+        ]
+        responses.append(ConnectionError("one transport failure"))
+        client = FakeClient(responses)
+        result = run_g4(client=client, interval_seconds=0)
+        self.assertTrue(result.passed)
+        self.assertEqual(
+            result.evidence["summary"]["non_retried_success_rate"],
+            0.95,
+        )
+        self.assertEqual(len(client.chat.completions.calls), G4_REQUEST_COUNT)
+        self.assertEqual(
+            result.evidence["request_policy"]["sdk_max_retries"],
+            0,
+        )
+
+    def test_g4_fails_below_ninety_five_percent_success(self) -> None:
+        responses = [
+            completion(
+                content="ok",
+                call_id=f"g4_{index}",
+                usage={"prompt_tokens": 10, "completion_tokens": 1},
+            )
+            for index in range(G4_REQUEST_COUNT - 2)
+        ]
+        responses.extend(
+            [
+                ConnectionError("transport failure one"),
+                TimeoutError("transport failure two"),
+            ]
+        )
+        result = run_g4(
+            client=FakeClient(responses),
+            interval_seconds=0,
+        )
+        self.assertFalse(result.passed)
+        assertion = next(
+            item
+            for item in result.assertions
+            if item.name == "non_retried_success_rate_at_least_95_percent"
+        )
+        self.assertFalse(assertion.passed)
+
+    def test_g4_fails_on_one_silent_model_substitution(self) -> None:
+        responses = [
+            completion(
+                content="ok",
+                call_id=f"g4_{index}",
+                usage={"prompt_tokens": 10, "completion_tokens": 1},
+            )
+            for index in range(G4_REQUEST_COUNT)
+        ]
+        responses[7] = completion(
+            model="other-model",
+            content="ok",
+            call_id="g4_identity_drift",
+            usage={"prompt_tokens": 10, "completion_tokens": 1},
+        )
+        result = run_g4(
+            client=FakeClient(responses),
+            interval_seconds=0,
+        )
+        self.assertFalse(result.passed)
+        self.assertEqual(
+            result.evidence["summary"]["identity_mismatches"],
+            1,
+        )
+
+    def test_g4_fails_when_success_response_lacks_usage_or_request_id(self) -> None:
+        responses = [
+            completion(
+                content="ok",
+                call_id=f"g4_{index}",
+                usage={"prompt_tokens": 10, "completion_tokens": 1},
+            )
+            for index in range(G4_REQUEST_COUNT)
+        ]
+        responses[3] = SimpleNamespace(
+            model=MODEL,
+            system_fingerprint="fp_test",
+            usage=None,
+            choices=[
+                SimpleNamespace(
+                    finish_reason="stop",
+                    message=SimpleNamespace(content="ok", tool_calls=None),
+                )
+            ],
+            _request_id=None,
+        )
+        result = run_g4(
+            client=FakeClient(responses),
+            interval_seconds=0,
+        )
+        self.assertFalse(result.passed)
+        self.assertEqual(result.evidence["summary"]["missing_usage"], 1)
+        self.assertEqual(
+            result.evidence["summary"]["missing_request_ids"],
+            1,
+        )
+
+    def test_g4_rejects_shortened_soak_even_when_every_call_succeeds(self) -> None:
+        responses = [
+            completion(
+                content="ok",
+                call_id=f"g4_{index}",
+                usage={"prompt_tokens": 10, "completion_tokens": 1},
+            )
+            for index in range(10)
+        ]
+        result = run_g4(
+            client=FakeClient(responses),
+            request_count=10,
+            interval_seconds=0,
+        )
+        self.assertFalse(result.passed)
+        assertion = next(
+            item
+            for item in result.assertions
+            if item.name == "exactly_twenty_requests_attempted"
+        )
+        self.assertFalse(assertion.passed)
+
+    def test_g4_rejects_output_contract_drift(self) -> None:
+        responses = [
+            completion(
+                content="ok",
+                call_id=f"g4_{index}",
+                usage={"prompt_tokens": 10, "completion_tokens": 1},
+            )
+            for index in range(G4_REQUEST_COUNT)
+        ]
+        responses[11] = completion(
+            content="not ok",
+            call_id="g4_output_drift",
+            usage={"prompt_tokens": 10, "completion_tokens": 2},
+        )
+        result = run_g4(
+            client=FakeClient(responses),
+            interval_seconds=0,
+        )
+        self.assertFalse(result.passed)
+        self.assertEqual(
+            result.evidence["summary"]["output_contract_mismatches"],
+            1,
+        )
 
 
 class ToolSchemaTests(TestCase):

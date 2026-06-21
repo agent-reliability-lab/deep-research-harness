@@ -39,6 +39,8 @@ PROBE_DIR = REPO_ROOT / "results" / "provider-probes"
 
 DEEPSEEK_BASE_URL = "https://api.deepseek.com"
 DEEPSEEK_NON_THINKING = {"thinking": {"type": "disabled"}}
+DEEPSEEK_MAX_RETRIES = 0
+DEEPSEEK_TIMEOUT_SECONDS = 120.0
 
 # Model under qualification. Spec primary is ``deepseek-v4-flash``; the retired
 # ``deepseek-chat`` alias is intentionally not used (spec: retired 2026-07-24).
@@ -72,8 +74,8 @@ def deepseek_client() -> OpenAI:
     return OpenAI(
         api_key=key,
         base_url=DEEPSEEK_BASE_URL,
-        max_retries=0,
-        timeout=120.0,
+        max_retries=DEEPSEEK_MAX_RETRIES,
+        timeout=DEEPSEEK_TIMEOUT_SECONDS,
     )
 
 
