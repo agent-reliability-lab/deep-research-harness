@@ -110,7 +110,9 @@ def runtime_metadata() -> dict[str, Any]:
             return None
 
     revision = git("rev-parse", "HEAD")
-    status = git("status", "--porcelain")
+    # Generated artifacts appear as untracked files during a gate run. They do
+    # not make the probe implementation itself dirty.
+    status = git("status", "--porcelain", "--untracked-files=no")
     return {
         "git_revision": revision,
         "git_dirty": bool(status) if status is not None else None,
