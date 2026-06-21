@@ -1,0 +1,146 @@
+{
+  "$defs": {
+    "RedistributionPolicy": {
+      "enum": [
+        "cache_only",
+        "redistributable"
+      ],
+      "title": "RedistributionPolicy",
+      "type": "string"
+    },
+    "SourceManifestEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "source_id": {
+          "minLength": 1,
+          "pattern": "^[a-z0-9][a-z0-9._-]*$",
+          "title": "Source Id",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "canonical_url": {
+          "format": "uri",
+          "minLength": 1,
+          "title": "Canonical Url",
+          "type": "string"
+        },
+        "retrieved_at": {
+          "format": "date-time",
+          "title": "Retrieved At",
+          "type": "string"
+        },
+        "content_hash": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Content Hash",
+          "type": "string"
+        },
+        "excerpt": {
+          "maxLength": 1200,
+          "minLength": 1,
+          "title": "Excerpt",
+          "type": "string"
+        },
+        "source_type": {
+          "$ref": "#/$defs/SourceType"
+        },
+        "version_or_pub_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Version Or Pub Date"
+        },
+        "redistribution_policy": {
+          "$ref": "#/$defs/RedistributionPolicy"
+        },
+        "cache_relpath": {
+          "minLength": 1,
+          "title": "Cache Relpath",
+          "type": "string"
+        },
+        "language": {
+          "default": "en",
+          "minLength": 2,
+          "title": "Language",
+          "type": "string"
+        },
+        "license": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "License"
+        }
+      },
+      "required": [
+        "source_id",
+        "title",
+        "canonical_url",
+        "retrieved_at",
+        "content_hash",
+        "excerpt",
+        "source_type",
+        "version_or_pub_date",
+        "redistribution_policy",
+        "cache_relpath"
+      ],
+      "title": "SourceManifestEntry",
+      "type": "object"
+    },
+    "SourceType": {
+      "enum": [
+        "official_docs",
+        "official_repository",
+        "research_paper",
+        "third_party_analysis"
+      ],
+      "title": "SourceType",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "0.1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "snapshot_id": {
+      "minLength": 1,
+      "title": "Snapshot Id",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "sources": {
+      "items": {
+        "$ref": "#/$defs/SourceManifestEntry"
+      },
+      "title": "Sources",
+      "type": "array"
+    }
+  },
+  "required": [
+    "snapshot_id",
+    "created_at",
+    "sources"
+  ],
+  "title": "SnapshotManifest",
+  "type": "object"
+}

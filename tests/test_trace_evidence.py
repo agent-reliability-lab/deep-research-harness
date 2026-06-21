@@ -295,6 +295,20 @@ class TraceValidationTests(TestCase):
         with self.assertRaisesRegex(TraceValidationError, "unknown tool_call_id"):
             validate_trace(events)
 
+    def test_tool_name_must_match_emitted_request(self) -> None:
+        events = successful_trace(uuid4(), uuid4())
+        events[2] = events[2].model_copy(update={"tool_name": "search_sources"})
+        with self.assertRaisesRegex(TraceValidationError, "does not match emitted name"):
+            validate_trace(events)
+
+    def test_tool_arguments_must_match_emitted_request(self) -> None:
+        events = successful_trace(uuid4(), uuid4())
+        events[2] = events[2].model_copy(
+            update={"arguments": {"source_id": "different-source"}}
+        )
+        with self.assertRaisesRegex(TraceValidationError, "arguments do not match"):
+            validate_trace(events)
+
     def test_unknown_checkpoint_is_rejected(self) -> None:
         events = successful_trace(uuid4(), uuid4())
         events[5] = events[5].model_copy(update={"checkpoint_id": uuid4()})
@@ -321,6 +335,32 @@ class TraceValidationTests(TestCase):
             store = EvidenceStore(Path(temp_dir) / "evidence.jsonl")
             store.append(record)
             with self.assertRaisesRegex(TraceValidationError, "does not match trace"):
+                validate_trace(events, store)
+
+    def test_orphan_evidence_store_record_is_rejected(self) -> None:
+        run_id = uuid4()
+        evidence_id = uuid4()
+        events = successful_trace(run_id, evidence_id)
+        with TemporaryDirectory() as temp_dir:
+            store = EvidenceStore(Path(temp_dir) / "evidence.jsonl")
+            for current_id in (evidence_id, uuid4()):
+                store.append(
+                    EvidenceRecord(
+                        evidence_id=current_id,
+                        run_id=run_id,
+                        claim="Mem0 stores memories.",
+                        source_id="src_mem0",
+                        source_url="https://example.com/mem0",
+                        retrieved_at=NOW,
+                        evidence_excerpt="Mem0 stores memories.",
+                        source_date=None,
+                        confidence=0.9,
+                    )
+                )
+            with self.assertRaisesRegex(
+                TraceValidationError,
+                "evidence store IDs missing from trace",
+            ):
                 validate_trace(events, store)
 
 
@@ -353,6 +393,7 @@ class SchemaAndCliTests(TestCase):
         for filename in (
             "trace-event.schema.json",
             "evidence-record.schema.json",
+            "snapshot-manifest.schema.json",
         ):
             schema = json.loads((root / "schemas" / filename).read_text())
             Draft202012Validator.check_schema(schema)

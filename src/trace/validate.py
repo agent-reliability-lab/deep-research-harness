@@ -76,7 +76,7 @@ def validate_trace(
 
     recorded_ids: set[UUID] = set()
     evidence_event_ids: dict[UUID, UUID] = {}
-    emitted_tool_call_ids: dict[str, UUID] = {}
+    emitted_tool_calls: dict[str, tuple[UUID, str, dict]] = {}
     executed_tool_call_ids: set[str] = set()
     checkpoint_ids: set[UUID] = set()
     for event in events:
@@ -97,20 +97,37 @@ def validate_trace(
                         f"run pinned {start.requested_model}"
                     )
             for call in event.response_tool_calls:
-                if call.id in emitted_tool_call_ids:
+                if call.id in emitted_tool_calls:
                     problems.append(f"duplicate emitted tool_call_id {call.id}")
-                emitted_tool_call_ids[call.id] = event.event_id
+                emitted_tool_calls[call.id] = (
+                    event.event_id,
+                    call.name,
+                    call.arguments,
+                )
         if isinstance(event, ToolExecutionEvent):
-            if event.tool_call_id not in emitted_tool_call_ids:
+            if event.tool_call_id not in emitted_tool_calls:
                 problems.append(
                     f"tool execution references unknown tool_call_id {event.tool_call_id}"
                 )
-            elif event.parent_event_id != emitted_tool_call_ids[event.tool_call_id]:
-                problems.append(
-                    f"tool execution {event.tool_call_id} parent_event_id="
-                    f"{event.parent_event_id} does not match emitter "
-                    f"{emitted_tool_call_ids[event.tool_call_id]}"
-                )
+            else:
+                emitter_id, emitted_name, emitted_arguments = emitted_tool_calls[
+                    event.tool_call_id
+                ]
+                if event.parent_event_id != emitter_id:
+                    problems.append(
+                        f"tool execution {event.tool_call_id} parent_event_id="
+                        f"{event.parent_event_id} does not match emitter {emitter_id}"
+                    )
+                if event.tool_name != emitted_name:
+                    problems.append(
+                        f"tool execution {event.tool_call_id} name={event.tool_name} "
+                        f"does not match emitted name={emitted_name}"
+                    )
+                if event.arguments != emitted_arguments:
+                    problems.append(
+                        f"tool execution {event.tool_call_id} arguments do not match "
+                        "the emitted request"
+                    )
             if event.tool_call_id in executed_tool_call_ids:
                 problems.append(f"tool_call_id executed twice: {event.tool_call_id}")
             executed_tool_call_ids.add(event.tool_call_id)
@@ -155,7 +172,15 @@ def validate_trace(
             problems.append(
                 f"evidence_recorded IDs missing from store: {sorted(map(str, missing_store_ids))}"
             )
+        orphan_store_ids = store.ids() - recorded_ids
+        if orphan_store_ids:
+            problems.append(
+                "evidence store IDs missing from trace: "
+                f"{sorted(map(str, orphan_store_ids))}"
+            )
         for evidence_id, event_id in evidence_event_ids.items():
+            if evidence_id not in store.ids():
+                continue
             record = store.get(evidence_id)
             if record.created_event_id is not None and record.created_event_id != event_id:
                 problems.append(

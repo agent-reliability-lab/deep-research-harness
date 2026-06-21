@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 from src.evidence.models import EvidenceRecord
+from src.snapshots.models import SnapshotManifest
 
 from .models import TRACE_EVENT_ADAPTER
 
@@ -18,6 +19,7 @@ def main() -> None:
     schemas = {
         "trace-event.schema.json": TRACE_EVENT_ADAPTER.json_schema(),
         "evidence-record.schema.json": EvidenceRecord.model_json_schema(),
+        "snapshot-manifest.schema.json": SnapshotManifest.model_json_schema(),
     }
     for filename, schema in schemas.items():
         path = SCHEMA_DIR / filename

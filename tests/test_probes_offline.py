@@ -14,6 +14,8 @@ from src.probes.deepseek_g3_tools import TOOLS, _validate_args
 from src.probes.deepseek_g3_tools import run as run_g3
 
 MODEL = "deepseek-v4-flash"
+EVIDENCE_ID_1 = "00000000-0000-0000-0000-000000000001"
+EVIDENCE_ID_2 = "00000000-0000-0000-0000-000000000002"
 
 
 def completion(
@@ -227,7 +229,7 @@ class GateDecisionTests(TestCase):
                 tool_name="finalize",
                 arguments={
                     "summary": "Mem0 uses vector storage with an optional graph layer.",
-                    "evidence_ids": ["ev_1"],
+                    "evidence_ids": [EVIDENCE_ID_1],
                 },
                 call_id="call_finalize",
             ),
@@ -279,7 +281,7 @@ class GateDecisionTests(TestCase):
                 tool_name="finalize",
                 arguments={
                     "summary": "Mem0 combines vector storage with an optional graph layer.",
-                    "evidence_ids": ["ev_1", "ev_2"],
+                    "evidence_ids": [EVIDENCE_ID_1, EVIDENCE_ID_2],
                 },
                 call_id="call_finalize",
             ),

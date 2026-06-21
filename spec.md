@@ -212,6 +212,13 @@ The live web is used to create a dated source snapshot, not as the only evaluati
 
 Use official documentation, technical papers, and official repositories as primary sources. Clearly label third-party analysis.
 
+For sources that cannot be redistributed, commit only a public manifest with
+metadata, a content hash, and a short excerpt. Keep the full cleaned text in a
+gitignored local cache. A missing cache may be re-fetched only when the cleaned
+content reproduces the committed hash; otherwise verification fails closed.
+This makes corpus integrity verifiable without republishing third-party text,
+but it is not a self-contained archival copy.
+
 ### Twenty tasks
 
 Create five task families with four variants each:
@@ -480,6 +487,7 @@ deep-research-harness/
 │   ├── agent/
 │   ├── evidence/
 │   ├── harness/
+│   ├── snapshots/
 │   ├── trace/
 │   ├── tools/
 │   └── evals/

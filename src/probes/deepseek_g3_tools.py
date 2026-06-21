@@ -14,8 +14,11 @@ Run standalone:
 from __future__ import annotations
 
 import json
+from uuid import UUID
 
-from jsonschema import Draft202012Validator
+from jsonschema import Draft202012Validator, FormatChecker
+
+from src.tools.schemas import TOOL_SCHEMAS
 
 from .common import (
     DEEPSEEK_NON_THINKING,
@@ -27,88 +30,7 @@ from .common import (
     write_artifact,
 )
 
-TOOLS = [
-    {
-        "type": "function",
-        "function": {
-            "name": "search_sources",
-            "description": "Search the frozen source corpus and return candidate source ids.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "query": {"type": "string", "description": "search query"},
-                    "max_results": {"type": "integer", "description": "max ids to return"},
-                },
-                "required": ["query"],
-                "additionalProperties": False,
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "read_source",
-            "description": "Return the cleaned text of one source by id.",
-            "parameters": {
-                "type": "object",
-                "properties": {"source_id": {"type": "string"}},
-                "required": ["source_id"],
-                "additionalProperties": False,
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "record_evidence",
-            "description": "Persist one evidence record linking a claim to a source.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "source_id": {"type": "string"},
-                    "claim": {"type": "string"},
-                    "excerpt": {"type": "string"},
-                },
-                "required": ["source_id", "claim"],
-                "additionalProperties": False,
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "check_contradiction",
-            "description": "Check whether two claims contradict each other.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "claim_a": {"type": "string"},
-                    "claim_b": {"type": "string"},
-                },
-                "required": ["claim_a", "claim_b"],
-                "additionalProperties": False,
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "finalize",
-            "description": (
-                "Finalize the answer with a one-line summary and the supporting evidence ids."
-            ),
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "summary": {"type": "string"},
-                    "evidence_ids": {"type": "array", "items": {"type": "string"}},
-                },
-                "required": ["summary", "evidence_ids"],
-                "additionalProperties": False,
-            },
-        },
-    },
-]
+TOOLS = TOOL_SCHEMAS
 
 # Deterministic canned tool returns so the probe does not depend on live data.
 SEARCH_RESULTS = ["src_mem0_docs", "src_mem0_paper"]
@@ -123,7 +45,10 @@ def _validate_args(tool_name: str, args: dict, tools_by_name: dict) -> list[str]
     schema = tools_by_name[tool_name]["function"]["parameters"]
     return [
         f"{'.'.join(str(item) for item in error.absolute_path) or '$'}: {error.message}"
-        for error in Draft202012Validator(schema).iter_errors(args)
+        for error in Draft202012Validator(
+            schema,
+            format_checker=FormatChecker(),
+        ).iter_errors(args)
     ]
 
 
@@ -135,7 +60,7 @@ def _stub_result(tool_name: str, args: dict, evidence_index: int) -> tuple[dict,
         source_id = args.get("source_id")
         return {"source_id": source_id, "text": SOURCE_TEXTS.get(source_id, "")}, None
     if tool_name == "record_evidence":
-        evidence_id = f"ev_{evidence_index}"
+        evidence_id = str(UUID(int=evidence_index))
         return {"evidence_id": evidence_id}, evidence_id
     if tool_name == "check_contradiction":
         return {"contradiction": False}, None
