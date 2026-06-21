@@ -76,7 +76,7 @@ Infrastructure failures, source failures, expected policy blocks, and agent fail
 - [x] Trace and evidence contracts implemented
 - [x] Frozen snapshot and canonical tool interface implemented
 - [x] C0 ReAct loop implemented and validated against a synthetic fixture
-- [ ] DeepSeek G4 stability soak completed
+- [x] DeepSeek G4 stability soak completed
 - [ ] C0 primary-provider run completed after G4
 - [ ] 80-run primary matrix completed
 - [ ] 32-run external-validity subset completed

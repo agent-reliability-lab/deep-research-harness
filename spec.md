@@ -140,7 +140,7 @@ Gate policy:
 
 | Role | Model | Provider | Status |
 |---|---|---|---|
-| Primary | `deepseek-v4-flash` | DeepSeek official API | G1–G3 passed June 21, 2026; G4 pending |
+| Primary | `deepseek-v4-flash` | DeepSeek official API | G1–G4 passed June 21, 2026 |
 | External validity | Claude Sonnet 4.6 | AiHubMix Anthropic-compatible endpoint | Pending G1–G4 probes |
 
 The legacy alias `deepseek-chat` is not used in configuration files because DeepSeek has announced its retirement on July 24, 2026.

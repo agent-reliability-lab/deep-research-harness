@@ -1,0 +1,634 @@
+{
+  "gate": "g4_stability",
+  "provider": "deepseek",
+  "requested_model": "deepseek-v4-flash",
+  "passed": true,
+  "assertions": [
+    {
+      "name": "exactly_twenty_requests_attempted",
+      "passed": true,
+      "detail": "configured=20 attempted=20"
+    },
+    {
+      "name": "retry_budget_is_zero",
+      "passed": true,
+      "detail": "sdk_max_retries=0 manual_retries=0"
+    },
+    {
+      "name": "non_retried_success_rate_at_least_95_percent",
+      "passed": true,
+      "detail": "successful=20/20 rate=1.000"
+    },
+    {
+      "name": "zero_model_identity_mismatches",
+      "passed": true,
+      "detail": "allowlist=['deepseek-v4-flash'] mismatched_indices=[]"
+    },
+    {
+      "name": "deterministic_output_contract_preserved",
+      "passed": true,
+      "detail": "mismatched_indices=[]"
+    },
+    {
+      "name": "request_ids_recorded_for_every_success",
+      "passed": true,
+      "detail": "missing_indices=[]"
+    },
+    {
+      "name": "usage_recorded_for_every_success",
+      "passed": true,
+      "detail": "missing_indices=[]"
+    }
+  ],
+  "evidence": {
+    "probe_id": "bcda0f4b-fb13-476f-bfa9-6bb5c3f5ad7b",
+    "request_policy": {
+      "request_count": 20,
+      "minimum_success_rate": 0.95,
+      "interval_seconds": 0.25,
+      "sdk_max_retries": 0,
+      "manual_retries": 0,
+      "timeout_seconds": 120.0,
+      "max_tokens_per_request": 8,
+      "thinking": "disabled"
+    },
+    "summary": {
+      "attempted": 20,
+      "successful": 20,
+      "failed": 0,
+      "non_retried_success_rate": 1.0,
+      "identity_mismatches": 0,
+      "output_contract_mismatches": 0,
+      "missing_request_ids": 0,
+      "missing_usage": 0,
+      "returned_models": {
+        "deepseek-v4-flash": 20
+      },
+      "request_id_sources": {
+        "response.id": 20
+      },
+      "system_fingerprints": {
+        "fp_8b330d02d0_prod0820_fp8_kvcache_20260402": 20
+      },
+      "error_types": {},
+      "status_codes": {},
+      "observed_rate_limit_headers": [],
+      "latency_ms": {
+        "min": 521,
+        "median": 771,
+        "p95": 912,
+        "max": 916
+      },
+      "duration_ms": 19764
+    },
+    "calls": [
+      {
+        "index": 1,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": "a25ec961-3f60-4dcd-b86b-ef0d83967fff",
+        "request_id_source": "response.id",
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 49,
+          "total_tokens": 50,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 49
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 902
+      },
+      {
+        "index": 2,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": "c0d6ca51-f006-419e-88dc-770ce4822909",
+        "request_id_source": "response.id",
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 49,
+          "total_tokens": 50,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 49
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 587
+      },
+      {
+        "index": 3,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": "d3432039-7c53-46b7-bdfc-b45d7cb9e294",
+        "request_id_source": "response.id",
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 49,
+          "total_tokens": 50,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 49
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 721
+      },
+      {
+        "index": 4,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": "f5ad8f0a-79b8-44db-8e42-61179360dddf",
+        "request_id_source": "response.id",
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 49,
+          "total_tokens": 50,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 49
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 816
+      },
+      {
+        "index": 5,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": "ed258479-b6cb-4734-ba0f-69d5e6bd2084",
+        "request_id_source": "response.id",
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 49,
+          "total_tokens": 50,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 49
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 774
+      },
+      {
+        "index": 6,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": "589cd9aa-2e70-43ec-8a18-9f10c204f609",
+        "request_id_source": "response.id",
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 49,
+          "total_tokens": 50,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 49
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 908
+      },
+      {
+        "index": 7,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": "6cd8418b-533c-4de2-bca7-4defa2dc9795",
+        "request_id_source": "response.id",
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 49,
+          "total_tokens": 50,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 49
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 912
+      },
+      {
+        "index": 8,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": "0623e570-6d92-4b10-bbfa-c33befec8e28",
+        "request_id_source": "response.id",
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 49,
+          "total_tokens": 50,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 49
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 521
+      },
+      {
+        "index": 9,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": "1409220a-5875-4b45-8887-ee487ee70068",
+        "request_id_source": "response.id",
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 49,
+          "total_tokens": 50,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 49
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 799
+      },
+      {
+        "index": 10,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": "26bb08f4-afb2-4667-b672-cd70fd534528",
+        "request_id_source": "response.id",
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 49,
+          "total_tokens": 50,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 49
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 761
+      },
+      {
+        "index": 11,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": "4af82039-7f30-4a92-9b99-de927a58e50b",
+        "request_id_source": "response.id",
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 49,
+          "total_tokens": 50,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 49
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 564
+      },
+      {
+        "index": 12,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": "82bf9d4a-5800-45a9-a916-06998f39067f",
+        "request_id_source": "response.id",
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 49,
+          "total_tokens": 50,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 49
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 593
+      },
+      {
+        "index": 13,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": "a82515d3-0c39-4984-a7e5-8c312d7b6a95",
+        "request_id_source": "response.id",
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 49,
+          "total_tokens": 50,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 49
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 896
+      },
+      {
+        "index": 14,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": "c40f3543-04b9-40aa-8225-eddf64d1ee18",
+        "request_id_source": "response.id",
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 49,
+          "total_tokens": 50,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 49
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 768
+      },
+      {
+        "index": 15,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": "df7b6f58-294b-4be0-9237-e25be983c950",
+        "request_id_source": "response.id",
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 49,
+          "total_tokens": 50,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 49
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 792
+      },
+      {
+        "index": 16,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": "a3949c49-4f7f-4ec7-9382-802587e124b8",
+        "request_id_source": "response.id",
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 49,
+          "total_tokens": 50,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 49
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 650
+      },
+      {
+        "index": 17,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": "9f952eae-10cf-4b07-811b-674a3e95d453",
+        "request_id_source": "response.id",
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 49,
+          "total_tokens": 50,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 49
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 674
+      },
+      {
+        "index": 18,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": "6cb03e67-701a-48f3-af46-8c7497e70742",
+        "request_id_source": "response.id",
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 49,
+          "total_tokens": 50,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 49
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 916
+      },
+      {
+        "index": 19,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": "bace3823-ad96-40ba-b95e-9fef22408cdc",
+        "request_id_source": "response.id",
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 49,
+          "total_tokens": 50,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 49
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 593
+      },
+      {
+        "index": 20,
+        "success": true,
+        "requested_model": "deepseek-v4-flash",
+        "returned_model": "deepseek-v4-flash",
+        "identity_match": true,
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": "81999682-f3da-4bfa-93a3-34c1064a43b4",
+        "request_id_source": "response.id",
+        "finish_reason": "stop",
+        "content": "ok",
+        "output_contract_match": true,
+        "usage": {
+          "completion_tokens": 1,
+          "prompt_tokens": 49,
+          "total_tokens": 50,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 49
+        },
+        "rate_limit_headers": {},
+        "latency_ms": 802
+      }
+    ]
+  },
+  "runtime": {
+    "git_revision": "f487dd0110e2b19d8e7a4676011151475d33100d",
+    "git_dirty": false,
+    "python_version": "3.14.4",
+    "openai_version": "2.43.0"
+  },
+  "timestamp": "20260621T152744.694577Z"
+}
