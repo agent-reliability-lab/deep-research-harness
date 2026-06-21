@@ -1,0 +1,218 @@
+{
+  "gate": "g3_tools",
+  "provider": "deepseek",
+  "requested_model": "deepseek-v4-flash",
+  "passed": true,
+  "assertions": [
+    {
+      "name": "all_five_tool_stages_called_in_order",
+      "passed": true,
+      "detail": "observed_stages=[['search_sources'], ['read_source', 'read_source'], ['record_evidence', 'record_evidence'], ['check_contradiction'], ['finalize']]"
+    },
+    {
+      "name": "all_tool_call_ids_present_and_unique",
+      "passed": true,
+      "detail": "tool_call_ids=['call_00_HY91JalhJPgfle3RhUPv4880', 'call_00_RmVWRSgNbg8dmiA200w79992', 'call_01_qBjxij9FBuNLNl4EOOth4210', 'call_00_5IbLF1CzqWsLQUOJfJtw3718', 'call_01_4gsZGQC7ZdRTtkGvudpP0541', 'call_00_dUyz3cv3tGsqvq2Lb0gO9493', 'call_00_Biwv9ASQFsobEUBDwR1M9604']"
+    },
+    {
+      "name": "arguments_schema_valid",
+      "passed": true,
+      "detail": "all tool arguments parsed and matched declared schema"
+    },
+    {
+      "name": "tool_state_preserved_across_turns",
+      "passed": true,
+      "detail": "read_source_ids=['src_mem0_docs', 'src_mem0_paper'] recorded_source_ids=['src_mem0_docs', 'src_mem0_paper'] generated_evidence_ids=['ev_1', 'ev_2'] final_evidence_ids=['ev_1', 'ev_2']"
+    },
+    {
+      "name": "identity_stable_across_tool_turns",
+      "passed": true,
+      "detail": "returned=['deepseek-v4-flash', 'deepseek-v4-flash', 'deepseek-v4-flash', 'deepseek-v4-flash', 'deepseek-v4-flash', 'deepseek-v4-flash'] allowlist=['deepseek-v4-flash']"
+    },
+    {
+      "name": "tool_finish_reason_reported",
+      "passed": true,
+      "detail": "finish_reasons=['tool_calls', 'tool_calls', 'tool_calls', 'tool_calls', 'tool_calls', 'length']"
+    },
+    {
+      "name": "final_tool_result_accepted",
+      "passed": true,
+      "detail": "final_content_present=True final_tool_calls=None"
+    }
+  ],
+  "evidence": {
+    "transcript": [
+      {
+        "turn": 0,
+        "tool_calls": [
+          {
+            "id": "call_00_HY91JalhJPgfle3RhUPv4880",
+            "name": "search_sources",
+            "arguments": "{\"query\": \"research workflow exercise\", \"max_results\": 5}"
+          }
+        ],
+        "content": ""
+      },
+      {
+        "turn": 1,
+        "tool_calls": [
+          {
+            "id": "call_00_RmVWRSgNbg8dmiA200w79992",
+            "name": "read_source",
+            "arguments": "{\"source_id\": \"src_mem0_docs\"}"
+          },
+          {
+            "id": "call_01_qBjxij9FBuNLNl4EOOth4210",
+            "name": "read_source",
+            "arguments": "{\"source_id\": \"src_mem0_paper\"}"
+          }
+        ],
+        "content": ""
+      },
+      {
+        "turn": 2,
+        "tool_calls": [
+          {
+            "id": "call_00_5IbLF1CzqWsLQUOJfJtw3718",
+            "name": "record_evidence",
+            "arguments": "{\"source_id\": \"src_mem0_docs\", \"claim\": \"Mem0 stores memories in a vector store.\", \"excerpt\": \"Mem0 stores memories in a vector store.\"}"
+          },
+          {
+            "id": "call_01_4gsZGQC7ZdRTtkGvudpP0541",
+            "name": "record_evidence",
+            "arguments": "{\"source_id\": \"src_mem0_paper\", \"claim\": \"Mem0 can add an optional graph layer.\", \"excerpt\": \"Mem0 can add an optional graph layer.\"}"
+          }
+        ],
+        "content": ""
+      },
+      {
+        "turn": 3,
+        "tool_calls": [
+          {
+            "id": "call_00_dUyz3cv3tGsqvq2Lb0gO9493",
+            "name": "check_contradiction",
+            "arguments": "{\"claim_a\": \"Mem0 stores memories in a vector store.\", \"claim_b\": \"Mem0 can add an optional graph layer.\"}"
+          }
+        ],
+        "content": ""
+      },
+      {
+        "turn": 4,
+        "tool_calls": [
+          {
+            "id": "call_00_Biwv9ASQFsobEUBDwR1M9604",
+            "name": "finalize",
+            "arguments": "{\"summary\": \"The research workflow was exercised: Mem0 stores memories in a vector store and can optionally add a graph layer. No contradiction found between the two claims.\", \"evidence_ids\": [\"ev_1\", \"ev_2\"]}"
+          }
+        ],
+        "content": ""
+      }
+    ],
+    "expected_sequence": [
+      "search_sources",
+      "read_source",
+      "record_evidence",
+      "check_contradiction",
+      "finalize"
+    ],
+    "observed_stages": [
+      [
+        "search_sources"
+      ],
+      [
+        "read_source",
+        "read_source"
+      ],
+      [
+        "record_evidence",
+        "record_evidence"
+      ],
+      [
+        "check_contradiction"
+      ],
+      [
+        "finalize"
+      ]
+    ],
+    "tool_call_ids": [
+      "call_00_HY91JalhJPgfle3RhUPv4880",
+      "call_00_RmVWRSgNbg8dmiA200w79992",
+      "call_01_qBjxij9FBuNLNl4EOOth4210",
+      "call_00_5IbLF1CzqWsLQUOJfJtw3718",
+      "call_01_4gsZGQC7ZdRTtkGvudpP0541",
+      "call_00_dUyz3cv3tGsqvq2Lb0gO9493",
+      "call_00_Biwv9ASQFsobEUBDwR1M9604"
+    ],
+    "parsed_args_by_tool": {
+      "search_sources": [
+        {
+          "query": "research workflow exercise",
+          "max_results": 5
+        }
+      ],
+      "read_source": [
+        {
+          "source_id": "src_mem0_docs"
+        },
+        {
+          "source_id": "src_mem0_paper"
+        }
+      ],
+      "record_evidence": [
+        {
+          "source_id": "src_mem0_docs",
+          "claim": "Mem0 stores memories in a vector store.",
+          "excerpt": "Mem0 stores memories in a vector store."
+        },
+        {
+          "source_id": "src_mem0_paper",
+          "claim": "Mem0 can add an optional graph layer.",
+          "excerpt": "Mem0 can add an optional graph layer."
+        }
+      ],
+      "check_contradiction": [
+        {
+          "claim_a": "Mem0 stores memories in a vector store.",
+          "claim_b": "Mem0 can add an optional graph layer."
+        }
+      ],
+      "finalize": [
+        {
+          "summary": "The research workflow was exercised: Mem0 stores memories in a vector store and can optionally add a graph layer. No contradiction found between the two claims.",
+          "evidence_ids": [
+            "ev_1",
+            "ev_2"
+          ]
+        }
+      ]
+    },
+    "generated_evidence_ids": [
+      "ev_1",
+      "ev_2"
+    ],
+    "returned_models": [
+      "deepseek-v4-flash",
+      "deepseek-v4-flash",
+      "deepseek-v4-flash",
+      "deepseek-v4-flash",
+      "deepseek-v4-flash",
+      "deepseek-v4-flash"
+    ],
+    "finish_reasons": [
+      "tool_calls",
+      "tool_calls",
+      "tool_calls",
+      "tool_calls",
+      "tool_calls",
+      "length"
+    ],
+    "final_content": "The research workflow has been exercised successfully. Here is a summary of the steps taken and findings:\n\n**Workflow Steps:**\n1. **Search** — Searched for \"research workflow exercise\" to discover relevant sources.\n2. **Read Sources** — Retrieved content from two sources: `src_mem0_docs"
+  },
+  "runtime": {
+    "git_revision": "fc2569de5d91ae3819c54beace248d32b1798907",
+    "git_dirty": false,
+    "python_version": "3.14.4",
+    "openai_version": "2.43.0"
+  },
+  "timestamp": "20260621T123917.032116Z"
+}

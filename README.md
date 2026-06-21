@@ -72,7 +72,8 @@ Infrastructure failures, source failures, expected policy blocks, and agent fail
 - [x] Four-configuration ablation defined
 - [x] Twenty-task evaluation design defined
 - [x] Provider qualification and exclusion policy defined
-- [ ] Provider probes executed and recorded
+- [x] DeepSeek G1–G3 probes executed and recorded
+- [ ] DeepSeek G4 stability soak completed
 - [ ] C0 baseline implemented
 - [ ] 80-run primary matrix completed
 - [ ] 32-run external-validity subset completed
