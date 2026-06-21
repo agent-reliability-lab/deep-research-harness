@@ -1,0 +1,91 @@
+{
+  "gate": "g2_cache",
+  "provider": "deepseek",
+  "requested_model": "deepseek-v4-flash",
+  "passed": true,
+  "assertions": [
+    {
+      "name": "cache_fields_reported",
+      "passed": true,
+      "detail": "cache_pairs=[(0, 2587), (2560, 27), (2560, 27)]"
+    },
+    {
+      "name": "final_call_shows_cache_hit",
+      "passed": true,
+      "detail": "cache_hit_tokens=[0, 2560, 2560]"
+    },
+    {
+      "name": "cache_hit_increases_after_warmup",
+      "passed": true,
+      "detail": "first_hit=0 final_hit=2560"
+    },
+    {
+      "name": "hit_plus_miss_reconciles_prompt_tokens",
+      "passed": true,
+      "detail": "per_call=[True, True, True]"
+    },
+    {
+      "name": "identity_stable_during_cache_probe",
+      "passed": true,
+      "detail": "returned=['deepseek-v4-flash', 'deepseek-v4-flash', 'deepseek-v4-flash'] allowlist=['deepseek-v4-flash']"
+    }
+  ],
+  "evidence": {
+    "probe_id": "4f37177e6a0c42448e0a02d1a5a131eb",
+    "settle_seconds": 3.0,
+    "calls": [
+      {
+        "usage": {
+          "completion_tokens": 16,
+          "prompt_tokens": 2587,
+          "total_tokens": 2603,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 2587
+        },
+        "returned_model": "deepseek-v4-flash",
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": null
+      },
+      {
+        "usage": {
+          "completion_tokens": 16,
+          "prompt_tokens": 2587,
+          "total_tokens": 2603,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 2560
+          },
+          "prompt_cache_hit_tokens": 2560,
+          "prompt_cache_miss_tokens": 27
+        },
+        "returned_model": "deepseek-v4-flash",
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": null
+      },
+      {
+        "usage": {
+          "completion_tokens": 16,
+          "prompt_tokens": 2587,
+          "total_tokens": 2603,
+          "completion_tokens_details": null,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 2560
+          },
+          "prompt_cache_hit_tokens": 2560,
+          "prompt_cache_miss_tokens": 27
+        },
+        "returned_model": "deepseek-v4-flash",
+        "system_fingerprint": "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+        "request_id": null
+      }
+    ]
+  },
+  "timestamp": "20260621T123355.156615Z"
+}

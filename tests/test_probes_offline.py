@@ -7,7 +7,7 @@ from types import SimpleNamespace
 from unittest import TestCase
 from unittest.mock import patch
 
-from src.probes.common import Assertion, ProbeResult, write_artifact
+from src.probes.common import Assertion, ProbeResult, runtime_metadata, write_artifact
 from src.probes.deepseek_g1_identity import run as run_g1
 from src.probes.deepseek_g2_cache import run as run_g2
 from src.probes.deepseek_g3_tools import TOOLS, _validate_args
@@ -53,6 +53,33 @@ def completion(
             )
         ],
         _request_id=f"req_{call_id}",
+    )
+
+
+def parallel_completion(*calls, model: str = MODEL):
+    return SimpleNamespace(
+        model=model,
+        system_fingerprint="fp_test",
+        usage={"prompt_tokens": 10},
+        choices=[
+            SimpleNamespace(
+                finish_reason="tool_calls",
+                message=SimpleNamespace(
+                    content=None,
+                    tool_calls=[
+                        SimpleNamespace(
+                            id=call_id,
+                            function=SimpleNamespace(
+                                name=tool_name,
+                                arguments=json.dumps(arguments),
+                            ),
+                        )
+                        for call_id, tool_name, arguments in calls
+                    ],
+                ),
+            )
+        ],
+        _request_id="req_parallel",
     )
 
 
@@ -105,6 +132,12 @@ class ProbeResultTests(TestCase):
             self.assertNotEqual(path_a, path_b)
             self.assertTrue(path_a.exists())
             self.assertTrue(path_b.exists())
+
+    def test_runtime_metadata_records_versions_and_revision(self) -> None:
+        metadata = runtime_metadata()
+        self.assertTrue(metadata["git_revision"])
+        self.assertTrue(metadata["python_version"])
+        self.assertTrue(metadata["openai_version"])
 
 
 class GateDecisionTests(TestCase):
@@ -204,6 +237,56 @@ class GateDecisionTests(TestCase):
         result = run_g3(client=client)
         self.assertTrue(result.passed)
         self.assertEqual(len(client.chat.completions.calls), 6)
+
+    def test_g3_accepts_valid_parallel_calls_within_stage(self) -> None:
+        tool_responses = [
+            completion(
+                tool_name="search_sources",
+                arguments={"query": "Mem0 architecture", "max_results": 2},
+                call_id="call_search",
+            ),
+            parallel_completion(
+                ("call_read_1", "read_source", {"source_id": "src_mem0_docs"}),
+                ("call_read_2", "read_source", {"source_id": "src_mem0_paper"}),
+            ),
+            parallel_completion(
+                (
+                    "call_record_1",
+                    "record_evidence",
+                    {
+                        "source_id": "src_mem0_docs",
+                        "claim": "Mem0 uses vector storage.",
+                    },
+                ),
+                (
+                    "call_record_2",
+                    "record_evidence",
+                    {
+                        "source_id": "src_mem0_paper",
+                        "claim": "Mem0 may add a graph layer.",
+                    },
+                ),
+            ),
+            completion(
+                tool_name="check_contradiction",
+                arguments={
+                    "claim_a": "Mem0 uses vector storage.",
+                    "claim_b": "Mem0 may add a graph layer.",
+                },
+                call_id="call_check",
+            ),
+            completion(
+                tool_name="finalize",
+                arguments={
+                    "summary": "Mem0 combines vector storage with an optional graph layer.",
+                    "evidence_ids": ["ev_1", "ev_2"],
+                },
+                call_id="call_finalize",
+            ),
+            completion(call_id="call_final"),
+        ]
+        result = run_g3(client=FakeClient(tool_responses))
+        self.assertTrue(result.passed)
 
     def test_g3_fails_when_cross_turn_state_is_lost(self) -> None:
         tool_responses = [

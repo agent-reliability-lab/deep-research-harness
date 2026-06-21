@@ -1,0 +1,62 @@
+{
+  "gate": "g1_identity",
+  "provider": "deepseek",
+  "requested_model": "deepseek-v4-flash",
+  "passed": true,
+  "assertions": [
+    {
+      "name": "requested_model_listed",
+      "passed": true,
+      "detail": "requested=deepseek-v4-flash available=['deepseek-v4-flash', 'deepseek-v4-pro']"
+    },
+    {
+      "name": "returned_model_in_allowlist",
+      "passed": true,
+      "detail": "returned=['deepseek-v4-flash', 'deepseek-v4-flash'] allowlist=['deepseek-v4-flash']"
+    },
+    {
+      "name": "model_stable_across_calls",
+      "passed": true,
+      "detail": "distinct_returned=['deepseek-v4-flash']"
+    },
+    {
+      "name": "system_fingerprint_reported",
+      "passed": true,
+      "detail": "system_fingerprints=['fp_8b330d02d0_prod0820_fp8_kvcache_20260402', 'fp_8b330d02d0_prod0820_fp8_kvcache_20260402']"
+    }
+  ],
+  "evidence": {
+    "allowlist": [
+      "deepseek-v4-flash"
+    ],
+    "available_models": [
+      "deepseek-v4-flash",
+      "deepseek-v4-pro"
+    ],
+    "returned_models": [
+      "deepseek-v4-flash",
+      "deepseek-v4-flash"
+    ],
+    "system_fingerprints": [
+      "fp_8b330d02d0_prod0820_fp8_kvcache_20260402",
+      "fp_8b330d02d0_prod0820_fp8_kvcache_20260402"
+    ],
+    "request_ids": [
+      null,
+      null
+    ],
+    "usage_sample": {
+      "completion_tokens": 1,
+      "prompt_tokens": 11,
+      "total_tokens": 12,
+      "completion_tokens_details": null,
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 0
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 11
+    }
+  },
+  "timestamp": "20260621T123351.980748Z"
+}

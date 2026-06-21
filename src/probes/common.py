@@ -16,8 +16,11 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
+import sys
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Any
 
@@ -86,6 +89,36 @@ def usage_dict(usage: Any) -> dict[str, Any]:
     return {k: getattr(usage, k) for k in dir(usage) if not k.startswith("_")}
 
 
+def _package_version(name: str) -> str | None:
+    try:
+        return version(name)
+    except PackageNotFoundError:
+        return None
+
+
+def runtime_metadata() -> dict[str, Any]:
+    def git(*args: str) -> str | None:
+        try:
+            return subprocess.run(
+                ["git", *args],
+                cwd=REPO_ROOT,
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+        except (OSError, subprocess.CalledProcessError):
+            return None
+
+    revision = git("rev-parse", "HEAD")
+    status = git("status", "--porcelain")
+    return {
+        "git_revision": revision,
+        "git_dirty": bool(status) if status is not None else None,
+        "python_version": sys.version.split()[0],
+        "openai_version": _package_version("openai"),
+    }
+
+
 @dataclass
 class Assertion:
     name: str
@@ -118,6 +151,7 @@ class ProbeResult:
             "passed": self.passed,
             "assertions": [asdict(a) for a in self.assertions],
             "evidence": self.evidence,
+            "runtime": runtime_metadata(),
             "timestamp": self.timestamp,
         }
 

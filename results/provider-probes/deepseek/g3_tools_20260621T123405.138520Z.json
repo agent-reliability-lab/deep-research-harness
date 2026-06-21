@@ -1,0 +1,103 @@
+{
+  "gate": "g3_tools",
+  "provider": "deepseek",
+  "requested_model": "deepseek-v4-flash",
+  "passed": false,
+  "assertions": [
+    {
+      "name": "all_five_tools_called_in_order",
+      "passed": false,
+      "detail": "observed=['search_sources']"
+    },
+    {
+      "name": "all_tool_call_ids_present_and_unique",
+      "passed": false,
+      "detail": "tool_call_ids=['call_00_1gbSfTIzlN6TiKy68QTq8082']"
+    },
+    {
+      "name": "arguments_schema_valid",
+      "passed": false,
+      "detail": "turn1 read_source: expected exactly 1 tool call, got 2"
+    },
+    {
+      "name": "tool_state_preserved_across_turns",
+      "passed": false,
+      "detail": "read_source_id=None recorded_source_id=None final_evidence_ids=[]"
+    },
+    {
+      "name": "identity_stable_across_tool_turns",
+      "passed": true,
+      "detail": "returned=['deepseek-v4-flash', 'deepseek-v4-flash'] allowlist=['deepseek-v4-flash']"
+    },
+    {
+      "name": "tool_finish_reason_reported",
+      "passed": false,
+      "detail": "finish_reasons=['tool_calls', 'tool_calls']"
+    },
+    {
+      "name": "final_tool_result_accepted",
+      "passed": false,
+      "detail": "final_content_present=False final_tool_calls=None"
+    }
+  ],
+  "evidence": {
+    "transcript": [
+      {
+        "turn": 0,
+        "tool_calls": [
+          {
+            "id": "call_00_1gbSfTIzlN6TiKy68QTq8082",
+            "name": "search_sources",
+            "arguments": "{\"query\": \"research workflow\", \"max_results\": 5}"
+          }
+        ],
+        "content": ""
+      },
+      {
+        "turn": 1,
+        "tool_calls": [
+          {
+            "id": "call_00_StlpXknlEYizcLCauXEH4941",
+            "name": "read_source",
+            "arguments": "{\"source_id\": \"src_mem0_docs\"}"
+          },
+          {
+            "id": "call_01_VJhlLP221bfGaJGObEj35916",
+            "name": "read_source",
+            "arguments": "{\"source_id\": \"src_mem0_paper\"}"
+          }
+        ],
+        "content": ""
+      }
+    ],
+    "expected_sequence": [
+      "search_sources",
+      "read_source",
+      "record_evidence",
+      "check_contradiction",
+      "finalize"
+    ],
+    "observed_sequence": [
+      "search_sources"
+    ],
+    "tool_call_ids": [
+      "call_00_1gbSfTIzlN6TiKy68QTq8082"
+    ],
+    "parsed_args_by_tool": {
+      "search_sources": {
+        "query": "research workflow",
+        "max_results": 5
+      }
+    },
+    "returned_models": [
+      "deepseek-v4-flash",
+      "deepseek-v4-flash"
+    ],
+    "finish_reasons": [
+      "tool_calls",
+      "tool_calls"
+    ],
+    "final_content": null
+  },
+  "timestamp": "20260621T123405.138520Z"
+}

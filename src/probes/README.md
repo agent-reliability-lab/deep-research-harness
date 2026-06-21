@@ -8,7 +8,7 @@ eval-valid run**.
 |---|---|---|
 | G1 Identity | `deepseek_g1_identity.py` | Returned `model` is in the allowlist on every call; identity stable; `system_fingerprint` recorded. |
 | G2 Cache accounting | `deepseek_g2_cache.py` | DeepSeek **automatic** prefix cache: a unique prefix is sent three times with settle intervals; the final call reports a larger cache hit; hit + miss reconciles to `prompt_tokens`. |
-| G3 Tool fidelity | `deepseek_g3_tools.py` | Deterministic five-stage fixture: every declared tool is forced once, JSON args pass full schema validation, exact `tool_call_id` values round-trip, and the final tool result is accepted. |
+| G3 Tool fidelity | `deepseek_g3_tools.py` | Deterministic five-stage fixture: every declared tool type is forced in sequence, one or more parallel calls are allowed per stage, JSON args pass full schema validation, exact `tool_call_id` values round-trip, and the final tool result is accepted. |
 | G4 Stability | _(separate soak, run before eval-valid runs)_ | 20-request soak: zero identity mismatches, ≥95% non-retried success. |
 
 > DeepSeek uses **automatic** caching (no `cache_control`), so G2 checks
