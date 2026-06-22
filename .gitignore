@@ -6,4 +6,5 @@ venv/
 .DS_Store
 *.egg-info/
 data/source_snapshots/cache/
+data/source_snapshots/**/cache/
 results/local/

@@ -10,6 +10,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 from unittest import TestCase
+from urllib.parse import urlparse
 from uuid import UUID, uuid4
 
 from jsonschema import Draft202012Validator
@@ -47,6 +48,14 @@ from src.trace.validate import validate_trace
 
 NOW = datetime(2026, 6, 21, 12, 0, tzinfo=UTC)
 MODEL = "deepseek-v4-flash"
+REPO_ROOT = Path(__file__).resolve().parents[1]
+MVP2_MANIFEST = (
+    REPO_ROOT
+    / "data"
+    / "source_snapshots"
+    / "memory-architecture-mvp2-2026-06-22-v1"
+    / "manifest.json"
+)
 
 
 def create_snapshot(root: Path) -> Path:
@@ -160,6 +169,40 @@ def append_model_call(
 
 
 class SnapshotCorpusTests(TestCase):
+    def test_mvp2_public_manifest_is_versioned_and_official(self) -> None:
+        manifest = SnapshotManifest.model_validate_json(
+            MVP2_MANIFEST.read_text(encoding="utf-8")
+        )
+        self.assertEqual(
+            manifest.snapshot_id,
+            "memory-architecture-mvp2-2026-06-22-v1",
+        )
+        self.assertEqual(len(manifest.sources), 17)
+        self.assertEqual(
+            {source.source_type for source in manifest.sources},
+            {SourceType.OFFICIAL_DOCS, SourceType.RESEARCH_PAPER},
+        )
+        self.assertTrue(
+            all(
+                source.redistribution_policy
+                is RedistributionPolicy.CACHE_ONLY
+                for source in manifest.sources
+            )
+        )
+        self.assertEqual(
+            {
+                urlparse(str(source.canonical_url)).hostname
+                for source in manifest.sources
+            },
+            {
+                "arxiv.org",
+                "docs.cognee.ai",
+                "docs.letta.com",
+                "docs.mem0.ai",
+                "help.getzep.com",
+            },
+        )
+
     def test_markdown_cleaner_preserves_visible_text_and_is_idempotent(
         self,
     ) -> None:
