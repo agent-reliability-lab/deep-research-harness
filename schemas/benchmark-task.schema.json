@@ -21,6 +21,14 @@
       "title": "CitationExpectations",
       "type": "object"
     },
+    "ClaimScoringMethod": {
+      "enum": [
+        "pattern_contract",
+        "llm_judge"
+      ],
+      "title": "ClaimScoringMethod",
+      "type": "string"
+    },
     "ClaimVerificationStatus": {
       "enum": [
         "draft",
@@ -32,6 +40,7 @@
     "EvaluationMode": {
       "enum": [
         "deterministic_fixture",
+        "deterministic_benchmark",
         "judge_required"
       ],
       "title": "EvaluationMode",
@@ -53,6 +62,9 @@
         },
         "verification_status": {
           "$ref": "#/$defs/ClaimVerificationStatus"
+        },
+        "scoring_method": {
+          "$ref": "#/$defs/ClaimScoringMethod"
         },
         "acceptable_source_ids": {
           "items": {
@@ -83,6 +95,7 @@
         "claim_id",
         "description",
         "verification_status",
+        "scoring_method",
         "acceptable_source_ids",
         "evidence_patterns",
         "answer_patterns"
@@ -208,7 +221,7 @@
   "additionalProperties": false,
   "properties": {
     "schema_version": {
-      "default": "0.2.0",
+      "default": "0.3.0",
       "title": "Schema Version",
       "type": "string"
     },

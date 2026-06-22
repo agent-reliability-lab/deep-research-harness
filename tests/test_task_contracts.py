@@ -3,18 +3,24 @@
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import TestCase
+from uuid import uuid4
 
 from src.agent.fixture import FixtureProvider
 from src.agent.runner import C0Runner
+from src.evidence import EvidenceStore
 from src.snapshots import SnapshotCorpus
 from src.tasks.cli import build_freeze_plan
+from src.tasks.evaluate import evaluate_deterministic_run
 from src.tasks.load import load_task
 from src.tasks.models import (
     BenchmarkTask,
+    ClaimScoringMethod,
     ClaimVerificationStatus,
+    EvaluationMode,
     TaskLifecycle,
 )
 from src.trace.models import RunBudget
@@ -28,9 +34,9 @@ FIXTURE_MANIFEST = (
 
 
 class TaskLifecycleTests(TestCase):
-    def test_two_real_drafts_load_but_are_not_freeze_ready(self) -> None:
+    def test_four_real_drafts_load_but_are_not_freeze_ready(self) -> None:
         tasks = [load_task(path) for path in sorted(DRAFT_DIR.glob("*.json"))]
-        self.assertEqual(len(tasks), 2)
+        self.assertEqual(len(tasks), 4)
         self.assertTrue(
             all(task.lifecycle is TaskLifecycle.DRAFT for task in tasks)
         )
@@ -41,6 +47,19 @@ class TaskLifecycleTests(TestCase):
             all(
                 claim.verification_status is ClaimVerificationStatus.DRAFT
                 for task in tasks
+                for claim in task.required_claims
+            )
+        )
+        deterministic = [
+            task
+            for task in tasks
+            if task.evaluation_mode is EvaluationMode.DETERMINISTIC_BENCHMARK
+        ]
+        self.assertEqual(len(deterministic), 2)
+        self.assertTrue(
+            all(
+                claim.scoring_method is ClaimScoringMethod.PATTERN_CONTRACT
+                for task in deterministic
                 for claim in task.required_claims
             )
         )
@@ -111,6 +130,47 @@ class TaskLifecycleTests(TestCase):
         with self.assertRaisesRegex(ValueError, "must exactly match"):
             BenchmarkTask.model_validate(payload)
 
+    def test_runner_revalidates_programmatically_modified_task(self) -> None:
+        task = load_task(FIXTURE_TASK).model_copy(
+            update={
+                "fixture_only": False,
+                "evaluation_mode": EvaluationMode.JUDGE_REQUIRED,
+            }
+        )
+        with TemporaryDirectory() as temp_dir:
+            with self.assertRaisesRegex(ValueError, "wrong scoring_method"):
+                C0Runner(
+                    task=task,
+                    corpus=SnapshotCorpus(FIXTURE_MANIFEST),
+                    provider=FixtureProvider(),
+                    budget=RunBudget(
+                        max_model_calls=10,
+                        max_tool_calls=20,
+                        max_input_tokens=100_000,
+                        max_output_tokens=20_000,
+                        max_cost_usd=5,
+                        max_duration_ms=60_000,
+                    ),
+                    max_iterations=10,
+                    output_dir=Path(temp_dir) / "run",
+                    run_group_id="revalidate-task",
+                )
+
+    def test_judge_task_cannot_use_deterministic_evaluator(self) -> None:
+        task = load_task(
+            DRAFT_DIR / "architecture-01-memory-placement.json"
+        )
+        with TemporaryDirectory() as temp_dir:
+            with self.assertRaisesRegex(ValueError, "judge_required"):
+                evaluate_deterministic_run(
+                    task=task,
+                    events=[],
+                    evidence=EvidenceStore(Path(temp_dir) / "evidence.jsonl"),
+                    sequence=0,
+                    timestamp=datetime(2026, 6, 22, tzinfo=UTC),
+                    parent_event_id=uuid4(),
+                )
+
 
 class FreezePlanTests(TestCase):
     def setUp(self) -> None:
@@ -118,9 +178,9 @@ class FreezePlanTests(TestCase):
             load_task(path) for path in sorted(DRAFT_DIR.glob("*.json"))
         ]
 
-    def test_plan_deduplicates_three_sources_across_two_tasks(self) -> None:
+    def test_plan_deduplicates_three_sources_across_four_tasks(self) -> None:
         plan = build_freeze_plan(self.tasks)
-        self.assertEqual(plan["task_count"], 2)
+        self.assertEqual(plan["task_count"], 4)
         self.assertEqual(plan["source_count"], 3)
         self.assertFalse(plan["all_tasks_frozen"])
         source_ids = {source["source_id"] for source in plan["sources"]}
@@ -134,7 +194,7 @@ class FreezePlanTests(TestCase):
         )
         self.assertTrue(
             all(
-                len(source["referenced_by_tasks"]) == 2
+                len(source["referenced_by_tasks"]) == 3
                 for source in plan["sources"]
             )
         )

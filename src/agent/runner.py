@@ -11,7 +11,7 @@ from uuid import UUID, uuid4
 
 from src.evidence import EvidenceStore
 from src.snapshots import SnapshotCorpus
-from src.tasks import BenchmarkTask, evaluate_fixture_run
+from src.tasks import BenchmarkTask, evaluate_deterministic_run
 from src.tasks.models import EvaluationMode, TaskLifecycle
 from src.tools import TOOL_SCHEMAS, ToolExecutionError, ToolRuntime
 from src.trace.metrics import RunMetrics, compute_run_metrics
@@ -63,6 +63,7 @@ class C0Runner:
         output_dir: str | Path,
         run_group_id: str,
     ) -> None:
+        task = BenchmarkTask.model_validate(task.model_dump())
         self.task = task
         self.corpus = corpus
         self.provider = provider
@@ -376,8 +377,11 @@ class C0Runner:
     ) -> RunOutcome:
         events = TraceReader(writer.path).read_all()
         parent_event_id = self._require_last_event_id(writer)
-        if self.task.evaluation_mode is EvaluationMode.DETERMINISTIC_FIXTURE:
-            evaluation = evaluate_fixture_run(
+        if self.task.evaluation_mode in {
+            EvaluationMode.DETERMINISTIC_FIXTURE,
+            EvaluationMode.DETERMINISTIC_BENCHMARK,
+        }:
+            evaluation = evaluate_deterministic_run(
                 task=self.task,
                 events=events,
                 evidence=evidence,
@@ -385,9 +389,13 @@ class C0Runner:
                 timestamp=self._now(),
                 parent_event_id=parent_event_id,
             )
-            failure_label = (
-                None if evaluation.task_success else "fixture_rubric_failed"
-            )
+            failure_label = None
+            if not evaluation.task_success:
+                failure_label = (
+                    "fixture_rubric_failed"
+                    if self.task.fixture_only
+                    else "deterministic_rubric_failed"
+                )
         else:
             final_report = next(
                 event

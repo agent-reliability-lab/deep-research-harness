@@ -25,6 +25,7 @@ class TaskFamily(StrEnum):
 
 class EvaluationMode(StrEnum):
     DETERMINISTIC_FIXTURE = "deterministic_fixture"
+    DETERMINISTIC_BENCHMARK = "deterministic_benchmark"
     JUDGE_REQUIRED = "judge_required"
 
 
@@ -36,6 +37,11 @@ class TaskLifecycle(StrEnum):
 class ClaimVerificationStatus(StrEnum):
     DRAFT = "draft"
     VERIFIED = "verified"
+
+
+class ClaimScoringMethod(StrEnum):
+    PATTERN_CONTRACT = "pattern_contract"
+    LLM_JUDGE = "llm_judge"
 
 
 class SourceRequirement(StrictModel):
@@ -56,6 +62,7 @@ class RequiredClaim(StrictModel):
     claim_id: str = Field(min_length=1, pattern=r"^[a-z0-9][a-z0-9._-]*$")
     description: str = Field(min_length=1)
     verification_status: ClaimVerificationStatus
+    scoring_method: ClaimScoringMethod
     acceptable_source_ids: list[str] = Field(min_length=1)
     evidence_patterns: list[str] = Field(min_length=1)
     answer_patterns: list[str] = Field(min_length=1)
@@ -83,7 +90,7 @@ class TaskRubric(StrictModel):
 
 
 class BenchmarkTask(StrictModel):
-    schema_version: str = "0.2.0"
+    schema_version: str = "0.3.0"
     task_id: str = Field(min_length=1, pattern=r"^[a-z0-9][a-z0-9._-]*$")
     task_version: str = Field(pattern=r"^\d+\.\d+\.\d+$")
     rubric_version: str = Field(pattern=r"^\d+\.\d+\.\d+$")
@@ -132,13 +139,39 @@ class BenchmarkTask(StrictModel):
                     f"claim {claim.claim_id} references task-disallowed sources: "
                     f"{sorted(unknown)}"
                 )
-        if self.fixture_only and self.evaluation_mode is not EvaluationMode.DETERMINISTIC_FIXTURE:
-            raise ValueError("fixture_only tasks require deterministic_fixture evaluation")
+        if (
+            self.fixture_only
+            and self.evaluation_mode is not EvaluationMode.DETERMINISTIC_FIXTURE
+        ):
+            raise ValueError(
+                "fixture_only tasks require deterministic_fixture evaluation"
+            )
         if (
             not self.fixture_only
             and self.evaluation_mode is EvaluationMode.DETERMINISTIC_FIXTURE
         ):
-            raise ValueError("deterministic_fixture evaluation is only valid for fixtures")
+            raise ValueError(
+                "deterministic_fixture evaluation is only valid for fixtures"
+            )
+        deterministic_modes = {
+            EvaluationMode.DETERMINISTIC_FIXTURE,
+            EvaluationMode.DETERMINISTIC_BENCHMARK,
+        }
+        expected_scoring_method = (
+            ClaimScoringMethod.PATTERN_CONTRACT
+            if self.evaluation_mode in deterministic_modes
+            else ClaimScoringMethod.LLM_JUDGE
+        )
+        wrong_scoring = [
+            claim.claim_id
+            for claim in self.required_claims
+            if claim.scoring_method is not expected_scoring_method
+        ]
+        if wrong_scoring:
+            raise ValueError(
+                f"{self.evaluation_mode.value} tasks contain claims with the "
+                f"wrong scoring_method: {wrong_scoring}"
+            )
         if self.lifecycle is TaskLifecycle.DRAFT:
             if self.source_snapshot_id is not None:
                 raise ValueError("draft tasks cannot pin a source_snapshot_id")

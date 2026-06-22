@@ -1,0 +1,90 @@
+{
+  "schema_version": "0.3.0",
+  "task_id": "memory-lifecycle-01-mem0-add-only",
+  "task_version": "0.1.0",
+  "rubric_version": "0.1.0",
+  "lifecycle": "draft",
+  "family": "memory_lifecycle",
+  "prompt": "Using only the frozen Mem0 source, answer two questions: (1) When new information arrives, does the current extraction algorithm overwrite or delete old facts, and what does it do instead? (2) What stated benefit does this behavior provide? Give one cited evidence record per answer. Do not discuss benchmark scores or make product recommendations.",
+  "fixture_only": false,
+  "evaluation_mode": "deterministic_benchmark",
+  "source_snapshot_id": null,
+  "source_requirements": [
+    {
+      "source_id": "mem0-memory-evaluation",
+      "source_type": "official_docs",
+      "canonical_url": "https://docs.mem0.ai/core-concepts/memory-evaluation",
+      "url_checked_at": "2026-06-22",
+      "required_topics": [
+        "ADD-only extraction",
+        "old and new fact preservation",
+        "temporal context"
+      ],
+      "selection_rationale": "Official Mem0 explanation of the current extraction behavior and its stated temporal-memory benefit."
+    }
+  ],
+  "required_claims": [
+    {
+      "claim_id": "add-only-preserves-old-facts",
+      "description": "The current Mem0 extraction path is ADD-only: new facts are stored alongside old ones, and old facts are not overwritten or deleted.",
+      "verification_status": "draft",
+      "scoring_method": "pattern_contract",
+      "acceptable_source_ids": [
+        "mem0-memory-evaluation"
+      ],
+      "evidence_patterns": [
+        "ADD-only extraction",
+        "stored alongside old ones",
+        "nothing is overwritten or deleted"
+      ],
+      "answer_patterns": [
+        "ADD-only",
+        "alongside old",
+        "not overwritten",
+        "not deleted"
+      ]
+    },
+    {
+      "claim_id": "temporal-context-benefit",
+      "description": "Keeping both old and new facts preserves temporal context and avoids information loss from premature consolidation.",
+      "verification_status": "draft",
+      "scoring_method": "pattern_contract",
+      "acceptable_source_ids": [
+        "mem0-memory-evaluation"
+      ],
+      "evidence_patterns": [
+        "preserves temporal context",
+        "eliminates information loss",
+        "premature consolidation"
+      ],
+      "answer_patterns": [
+        "temporal context",
+        "information loss",
+        "premature consolidation"
+      ]
+    }
+  ],
+  "acceptable_source_ids": [
+    "mem0-memory-evaluation"
+  ],
+  "known_distractors": [
+    "the current algorithm overwrites the old fact",
+    "the current algorithm deletes the old fact",
+    "Mem0 stores every conversation turn verbatim"
+  ],
+  "required_comparison_dimensions": [
+    "write behavior",
+    "old-fact retention",
+    "stated temporal benefit"
+  ],
+  "citation_expectations": {
+    "minimum_citations": 2,
+    "minimum_unique_sources": 1
+  },
+  "rubric": {
+    "minimum_required_claim_coverage": 1.0,
+    "minimum_citation_precision": 1.0,
+    "minimum_citation_entailment": 1.0,
+    "maximum_distractor_mentions": 0
+  }
+}

@@ -16,7 +16,11 @@ from src.agent.provider import ModelCompletion, ModelProtocolError
 from src.agent.runner import C0Runner
 from src.snapshots import SnapshotCorpus
 from src.tasks.load import load_task
-from src.tasks.models import BenchmarkTask, EvaluationMode
+from src.tasks.models import (
+    BenchmarkTask,
+    ClaimScoringMethod,
+    EvaluationMode,
+)
 from src.trace.models import (
     CallCost,
     CallStatus,
@@ -198,6 +202,64 @@ class C0RunnerTests(TestCase):
         )
         self.assertTrue(outcome.report_path and outcome.report_path.exists())
 
+    def test_deterministic_answer_contract_requires_every_pattern(self) -> None:
+        first_claim = self.task.required_claims[0].model_copy(
+            update={
+                "answer_patterns": [
+                    *self.task.required_claims[0].answer_patterns,
+                    "missing answer token",
+                ]
+            }
+        )
+        self.task = self.task.model_copy(
+            update={
+                "required_claims": [
+                    first_claim,
+                    *self.task.required_claims[1:],
+                ]
+            }
+        )
+        outcome, _ = self.run_with(FixtureProvider())
+        self.assertEqual(outcome.status, EvaluationStatus.EVAL_VALID)
+        self.assertFalse(outcome.metrics.task_success)
+        self.assertEqual(outcome.metrics.required_claim_coverage, 0.5)
+        self.assertEqual(outcome.failure_label, "fixture_rubric_failed")
+
+    def test_citation_precision_and_entailment_are_independent(self) -> None:
+        first_claim = self.task.required_claims[0].model_copy(
+            update={
+                "evidence_patterns": [
+                    *self.task.required_claims[0].evidence_patterns,
+                    "missing evidence token",
+                ]
+            }
+        )
+        self.task = self.task.model_copy(
+            update={
+                "required_claims": [
+                    first_claim,
+                    *self.task.required_claims[1:],
+                ]
+            }
+        )
+        outcome, _ = self.run_with(FixtureProvider())
+        self.assertEqual(outcome.metrics.citation_precision, 1.0)
+        self.assertEqual(outcome.metrics.citation_entailment_rate, 0.5)
+        self.assertFalse(outcome.metrics.task_success)
+
+    def test_deterministic_benchmark_is_scored_in_development_scope(self) -> None:
+        self.task = self.task.model_copy(
+            update={
+                "fixture_only": False,
+                "evaluation_mode": EvaluationMode.DETERMINISTIC_BENCHMARK,
+            }
+        )
+        outcome, _ = self.run_with(FixtureProvider())
+        self.assertEqual(outcome.status, EvaluationStatus.EVAL_VALID)
+        self.assertEqual(outcome.metrics.evaluation_scope.value, "development")
+        self.assertTrue(outcome.metrics.included_in_egtsr_denominator)
+        self.assertTrue(outcome.metrics.task_success)
+
     def test_iteration_budget_exhaustion_is_agent_failure_with_valid_trace(self) -> None:
         outcome, events = self.run_with(
             FixtureProvider(),
@@ -286,10 +348,17 @@ class C0RunnerTests(TestCase):
         )
 
     def test_real_task_completion_is_judge_pending_not_scored_success(self) -> None:
+        judge_claims = [
+            claim.model_copy(
+                update={"scoring_method": ClaimScoringMethod.LLM_JUDGE}
+            )
+            for claim in self.task.required_claims
+        ]
         self.task = self.task.model_copy(
             update={
                 "fixture_only": False,
                 "evaluation_mode": EvaluationMode.JUDGE_REQUIRED,
+                "required_claims": judge_claims,
             }
         )
         outcome, _ = self.run_with(FixtureProvider())
@@ -316,13 +385,21 @@ class TaskContractTests(TestCase):
             BenchmarkTask.model_validate(payload)
 
     def test_runner_rejects_task_source_missing_from_snapshot(self) -> None:
-        task = load_task(TASK_PATH).model_copy(
+        base_task = load_task(TASK_PATH)
+        missing_requirement = base_task.source_requirements[0].model_copy(
+            update={"source_id": "missing-source"}
+        )
+        task = base_task.model_copy(
             update={
                 "acceptable_source_ids": [
                     "src_mem0_docs",
                     "src_mem0_paper",
                     "missing-source",
-                ]
+                ],
+                "source_requirements": [
+                    *base_task.source_requirements,
+                    missing_requirement,
+                ],
             }
         )
         with TemporaryDirectory() as temp_dir:

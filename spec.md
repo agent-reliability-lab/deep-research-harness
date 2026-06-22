@@ -241,10 +241,19 @@ Each task receives:
 The machine-readable task contract is exported as
 `schemas/benchmark-task.schema.json`. Synthetic integration fixtures use the
 `deterministic_fixture` evaluator and are never eligible for the primary
-headline metric. Real benchmark tasks use `judge_required` until the evaluation
-pipeline records a scored result. Every run records an `evaluation_scope`, and
-metric aggregation rejects mixed scopes so fixture, development, primary, and
-external-validity traces cannot be pooled accidentally.
+headline metric. Narrow real tasks whose full evidence contract can be
+specified in advance use `deterministic_benchmark`; a claim passes only when
+all answer patterns and all evidence patterns match. Broader tasks use
+`judge_required`, and the deterministic evaluator must reject them rather than
+substitute citation precision for entailment. Every run records an
+`evaluation_scope`, and metric aggregation rejects mixed scopes so fixture,
+development, primary, and external-validity traces cannot be pooled
+accidentally.
+
+Citation precision and citation entailment are independent measurements. A
+citation is precise when it points to a task-allowed source. It is entailing
+only when the cited evidence satisfies a required claim's evidence contract or
+an independently validated judge determines that it supports the claim.
 
 Real tasks also use a fail-closed lifecycle. A `draft` task records source
 requirements and provisional claims but cannot pin a snapshot or enter the

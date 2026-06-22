@@ -1,8 +1,9 @@
-"""Benchmark task contracts and deterministic fixture evaluation."""
+"""Benchmark task contracts and deterministic evaluation."""
 
-from .evaluate import evaluate_fixture_run
+from .evaluate import evaluate_deterministic_run
 from .models import (
     BenchmarkTask,
+    ClaimScoringMethod,
     ClaimVerificationStatus,
     RequiredClaim,
     SourceRequirement,
@@ -12,10 +13,11 @@ from .models import (
 
 __all__ = [
     "BenchmarkTask",
+    "ClaimScoringMethod",
     "ClaimVerificationStatus",
     "RequiredClaim",
     "SourceRequirement",
     "TaskLifecycle",
     "TaskRubric",
-    "evaluate_fixture_run",
+    "evaluate_deterministic_run",
 ]

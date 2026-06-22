@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.2.0",
+  "schema_version": "0.3.0",
   "task_id": "architecture-02-retrieval-control",
   "task_version": "0.1.0",
   "rubric_version": "0.1.0",
@@ -52,6 +52,7 @@
       "claim_id": "mem0-multi-signal-retrieval",
       "description": "Mem0 retrieves and ranks external memories using multiple signals before returning a top-k set.",
       "verification_status": "draft",
+      "scoring_method": "llm_judge",
       "acceptable_source_ids": [
         "mem0-memory-evaluation"
       ],
@@ -70,6 +71,7 @@
       "claim_id": "letta-blocks-continuously-visible",
       "description": "Letta memory blocks remain available in the active context without a retrieval call.",
       "verification_status": "draft",
+      "scoring_method": "llm_judge",
       "acceptable_source_ids": [
         "letta-memory-blocks"
       ],
@@ -87,6 +89,7 @@
       "claim_id": "letta-archival-tool-retrieval",
       "description": "Letta archival memory is searched through an on-demand retrieval path rather than continuously occupying active context.",
       "verification_status": "draft",
+      "scoring_method": "llm_judge",
       "acceptable_source_ids": [
         "letta-archival-memory"
       ],

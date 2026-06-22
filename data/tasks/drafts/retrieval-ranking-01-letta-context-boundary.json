@@ -1,0 +1,109 @@
+{
+  "schema_version": "0.3.0",
+  "task_id": "retrieval-ranking-01-letta-context-boundary",
+  "task_version": "0.1.0",
+  "rubric_version": "0.1.0",
+  "lifecycle": "draft",
+  "family": "retrieval_ranking",
+  "prompt": "Using only the two frozen Letta sources, classify memory blocks and archival memory by active-context visibility and retrieval requirement. State the exact documented behavior of each layer, with one citation per layer. Do not infer latency, quality, or token savings beyond what the sources explicitly state.",
+  "fixture_only": false,
+  "evaluation_mode": "deterministic_benchmark",
+  "source_snapshot_id": null,
+  "source_requirements": [
+    {
+      "source_id": "letta-memory-blocks",
+      "source_type": "official_docs",
+      "canonical_url": "https://docs.letta.com/guides/core-concepts/memory/memory-blocks",
+      "url_checked_at": "2026-06-22",
+      "required_topics": [
+        "context-window residency",
+        "persistence across interactions",
+        "no-retrieval visibility"
+      ],
+      "selection_rationale": "Official Letta definition of memory blocks as persistent, always-visible sections of the context window."
+    },
+    {
+      "source_id": "letta-archival-memory",
+      "source_type": "official_docs",
+      "canonical_url": "https://docs.letta.com/guides/core-concepts/memory/archival-memory",
+      "url_checked_at": "2026-06-22",
+      "required_topics": [
+        "semantic search",
+        "cannot be pinned",
+        "on-demand tool query"
+      ],
+      "selection_rationale": "Official Letta definition of archival memory as semantically searchable data queried on demand through tools."
+    }
+  ],
+  "required_claims": [
+    {
+      "claim_id": "blocks-always-visible",
+      "description": "Letta memory blocks are structured sections of the context window that persist across interactions and remain visible without retrieval.",
+      "verification_status": "draft",
+      "scoring_method": "pattern_contract",
+      "acceptable_source_ids": [
+        "letta-memory-blocks"
+      ],
+      "evidence_patterns": [
+        "structured sections",
+        "context window",
+        "persist across all interactions",
+        "always visible",
+        "no retrieval needed"
+      ],
+      "answer_patterns": [
+        "memory blocks",
+        "context window",
+        "persist",
+        "always visible",
+        "no retrieval"
+      ]
+    },
+    {
+      "claim_id": "archival-on-demand-tools",
+      "description": "Letta archival memory is a semantically searchable database that cannot be pinned to the context window and must be queried on demand through tools.",
+      "verification_status": "draft",
+      "scoring_method": "pattern_contract",
+      "acceptable_source_ids": [
+        "letta-archival-memory"
+      ],
+      "evidence_patterns": [
+        "semantically searchable database",
+        "cannot be pinned to the context window",
+        "queried on-demand via tools"
+      ],
+      "answer_patterns": [
+        "archival memory",
+        "semantically searchable",
+        "cannot be pinned",
+        "on-demand",
+        "tools"
+      ]
+    }
+  ],
+  "acceptable_source_ids": [
+    "letta-memory-blocks",
+    "letta-archival-memory"
+  ],
+  "known_distractors": [
+    "archival memory is always visible in the context window",
+    "memory blocks require semantic search on every turn",
+    "the documentation proves lower latency"
+  ],
+  "required_comparison_dimensions": [
+    "active-context visibility",
+    "persistence",
+    "retrieval requirement",
+    "tool boundary"
+  ],
+  "citation_expectations": {
+    "minimum_citations": 2,
+    "minimum_unique_sources": 2
+  },
+  "rubric": {
+    "minimum_required_claim_coverage": 1.0,
+    "minimum_citation_precision": 1.0,
+    "minimum_citation_entailment": 1.0,
+    "maximum_distractor_mentions": 0
+  }
+}

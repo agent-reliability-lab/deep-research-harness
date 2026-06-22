@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.2.0",
+  "schema_version": "0.3.0",
   "task_id": "architecture-01-memory-placement",
   "task_version": "0.1.0",
   "rubric_version": "0.1.0",
@@ -17,10 +17,10 @@
       "url_checked_at": "2026-06-22",
       "required_topics": [
         "candidate fact extraction",
-        "memory update actions",
+        "ADD-only extraction",
         "vector graph and history stores"
       ],
-      "selection_rationale": "Official Mem0 architecture walkthrough covering extraction, update decisions, storage, and retrieval."
+      "selection_rationale": "Official Mem0 architecture walkthrough covering distillation, ADD-only extraction, storage, and retrieval."
     },
     {
       "source_id": "letta-memory-blocks",
@@ -50,26 +50,28 @@
   "required_claims": [
     {
       "claim_id": "mem0-external-memory-path",
-      "description": "Mem0 extracts candidate facts, applies memory update decisions, and stores persistent memory outside the active prompt for later retrieval.",
+      "description": "Mem0 distills candidate facts and uses ADD-only extraction, storing new facts alongside old facts for later retrieval.",
       "verification_status": "draft",
+      "scoring_method": "llm_judge",
       "acceptable_source_ids": [
         "mem0-memory-evaluation"
       ],
       "evidence_patterns": [
         "extract",
-        "ADD",
-        "UPDATE",
-        "vector"
+        "ADD-only",
+        "stored alongside old",
+        "retrieval"
       ],
       "answer_patterns": [
-        "extract",
-        "external"
+        "ADD-only",
+        "alongside"
       ]
     },
     {
       "claim_id": "letta-blocks-in-context",
       "description": "Letta memory blocks are structured persistent state that remains visible in the active model context.",
       "verification_status": "draft",
+      "scoring_method": "llm_judge",
       "acceptable_source_ids": [
         "letta-memory-blocks"
       ],
@@ -87,6 +89,7 @@
       "claim_id": "letta-archival-on-demand",
       "description": "Letta archival memory is kept outside the active context and searched on demand.",
       "verification_status": "draft",
+      "scoring_method": "llm_judge",
       "acceptable_source_ids": [
         "letta-archival-memory"
       ],

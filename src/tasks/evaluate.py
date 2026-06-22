@@ -1,4 +1,4 @@
-"""Deterministic evaluator for synthetic integration fixtures."""
+"""Deterministic evaluator for exact, source-grounded pattern contracts."""
 
 from __future__ import annotations
 
@@ -17,19 +17,19 @@ from src.trace.models import (
 from .models import BenchmarkTask, EvaluationMode, RequiredClaim
 
 
-def _contains_any(text: str, patterns: list[str]) -> bool:
+def _contains_all(text: str, patterns: list[str]) -> bool:
     normalized = text.casefold()
-    return any(pattern.casefold() in normalized for pattern in patterns)
+    return all(pattern.casefold() in normalized for pattern in patterns)
 
 
 def _record_supports_claim(record: EvidenceRecord, claim: RequiredClaim) -> bool:
     if record.source_id not in claim.acceptable_source_ids:
         return False
     searchable = f"{record.claim}\n{record.evidence_excerpt}"
-    return _contains_any(searchable, claim.evidence_patterns)
+    return _contains_all(searchable, claim.evidence_patterns)
 
 
-def evaluate_fixture_run(
+def evaluate_deterministic_run(
     *,
     task: BenchmarkTask,
     events: list[TraceEvent],
@@ -38,8 +38,15 @@ def evaluate_fixture_run(
     timestamp: datetime,
     parent_event_id: UUID,
 ) -> EvaluationEvent:
-    if task.evaluation_mode is not EvaluationMode.DETERMINISTIC_FIXTURE:
-        raise ValueError("only deterministic_fixture tasks can use this evaluator")
+    task = BenchmarkTask.model_validate(task.model_dump())
+    allowed_modes = {
+        EvaluationMode.DETERMINISTIC_FIXTURE,
+        EvaluationMode.DETERMINISTIC_BENCHMARK,
+    }
+    if task.evaluation_mode not in allowed_modes:
+        raise ValueError(
+            "judge_required tasks cannot use deterministic pattern evaluation"
+        )
 
     final_report = next(
         (event for event in reversed(events) if isinstance(event, FinalReportEvent)),
@@ -56,7 +63,9 @@ def evaluate_fixture_run(
         None,
     )
     if final_report is None or finalize_call is None:
-        raise ValueError("fixture evaluation requires a successful final report")
+        raise ValueError(
+            "deterministic evaluation requires a successful final report"
+        )
 
     summary = str(finalize_call.result["summary"])
     cited_records = [
@@ -64,13 +73,17 @@ def evaluate_fixture_run(
     ]
     supported_claims = 0
     for claim in task.required_claims:
-        answer_present = _contains_any(summary, claim.answer_patterns)
+        answer_present = _contains_all(summary, claim.answer_patterns)
         evidence_present = any(
             _record_supports_claim(record, claim) for record in cited_records
         )
         supported_claims += answer_present and evidence_present
 
     supported_citations = sum(
+        record.source_id in task.acceptable_source_ids
+        for record in cited_records
+    )
+    entailed_citations = sum(
         any(_record_supports_claim(record, claim) for claim in task.required_claims)
         for record in cited_records
     )
@@ -83,7 +96,7 @@ def evaluate_fixture_run(
 
     coverage = supported_claims / len(task.required_claims)
     precision = supported_citations / citations_total if citations_total else 0.0
-    entailment = precision
+    entailment = entailed_citations / citations_total if citations_total else 0.0
     citation_shape_passed = (
         citations_total >= task.citation_expectations.minimum_citations
         and unique_sources >= task.citation_expectations.minimum_unique_sources
@@ -112,7 +125,7 @@ def evaluate_fixture_run(
         supported_required_claims=supported_claims,
         citations_total=citations_total,
         supported_citations=supported_citations,
-        entailed_citations=supported_citations,
+        entailed_citations=entailed_citations,
         factual_correctness_passed=factual_correctness,
         critical_policy_violations=0,
         final_artifact_within_budget=final_report.produced_within_budget,
