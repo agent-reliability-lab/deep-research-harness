@@ -2,7 +2,7 @@
   "schema_version": "0.3.0",
   "task_id": "architecture-01-memory-placement",
   "task_version": "0.1.0",
-  "rubric_version": "0.1.0",
+  "rubric_version": "0.2.0",
   "lifecycle": "draft",
   "family": "architecture_comparison",
   "prompt": "Compare how Mem0 and Letta place persistent memory relative to the active model context. Explain Mem0's extraction and external-memory path, Letta's always-visible memory blocks, and Letta's on-demand archival memory. Do not recommend a winner; identify the architectural trade-off and cite every required claim.",
@@ -57,10 +57,10 @@
         "mem0-memory-evaluation"
       ],
       "evidence_patterns": [
-        "extract",
-        "ADD-only",
-        "stored alongside old",
-        "retrieval"
+        "Single-pass LLM extraction",
+        "ADD-only facts",
+        "stored alongside old ones",
+        "Primary fact storage + semantic retrieval"
       ],
       "answer_patterns": [
         "ADD-only",
@@ -76,9 +76,11 @@
         "letta-memory-blocks"
       ],
       "evidence_patterns": [
-        "in-context",
+        "structured sections",
+        "context window",
+        "persist across all interactions",
         "always visible",
-        "memory blocks"
+        "no retrieval needed"
       ],
       "answer_patterns": [
         "memory blocks",
@@ -94,9 +96,9 @@
         "letta-archival-memory"
       ],
       "evidence_patterns": [
-        "outside",
-        "semantic search",
-        "on demand"
+        "semantically searchable database",
+        "cannot be pinned to the context window",
+        "queried on-demand via tools"
       ],
       "answer_patterns": [
         "archival memory",

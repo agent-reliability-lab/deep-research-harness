@@ -2,7 +2,7 @@
   "schema_version": "0.3.0",
   "task_id": "architecture-02-retrieval-control",
   "task_version": "0.1.0",
-  "rubric_version": "0.1.0",
+  "rubric_version": "0.2.0",
   "lifecycle": "draft",
   "family": "architecture_comparison",
   "prompt": "Compare the retrieval-control boundary in Mem0 and Letta. Explain how Mem0 ranks externally stored memories, how Letta keeps memory blocks continuously available, and how Letta accesses archival memory through on-demand search. Conclude with the token-visibility trade-off without making unsupported latency or quality claims.",
@@ -57,10 +57,10 @@
         "mem0-memory-evaluation"
       ],
       "evidence_patterns": [
-        "semantic",
+        "Semantic Search",
         "BM25",
-        "entity",
-        "top-k"
+        "Entity Search",
+        "final top-K set"
       ],
       "answer_patterns": [
         "multiple",
@@ -76,9 +76,11 @@
         "letta-memory-blocks"
       ],
       "evidence_patterns": [
-        "in-context",
+        "structured sections",
+        "context window",
+        "persist across all interactions",
         "always visible",
-        "context window"
+        "no retrieval needed"
       ],
       "answer_patterns": [
         "memory blocks",
@@ -94,9 +96,9 @@
         "letta-archival-memory"
       ],
       "evidence_patterns": [
-        "semantic search",
-        "tool",
-        "outside"
+        "semantically searchable database",
+        "cannot be pinned to the context window",
+        "queried on-demand via tools"
       ],
       "answer_patterns": [
         "archival memory",

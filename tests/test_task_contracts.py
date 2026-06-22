@@ -13,7 +13,7 @@ from src.agent.fixture import FixtureProvider
 from src.agent.runner import C0Runner
 from src.evidence import EvidenceStore
 from src.snapshots import SnapshotCorpus
-from src.tasks.cli import build_freeze_plan
+from src.tasks.cli import build_freeze_plan, load_source_texts
 from src.tasks.evaluate import evaluate_deterministic_run
 from src.tasks.load import load_task
 from src.tasks.models import (
@@ -23,6 +23,7 @@ from src.tasks.models import (
     EvaluationMode,
     TaskLifecycle,
 )
+from src.tasks.preflight import audit_evidence_patterns
 from src.trace.models import RunBudget
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -214,3 +215,56 @@ class FreezePlanTests(TestCase):
         )
         with self.assertRaisesRegex(ValueError, "conflicting canonical_url"):
             build_freeze_plan([self.tasks[0], conflicting])
+
+
+class EvidencePatternPreflightTests(TestCase):
+    def setUp(self) -> None:
+        self.task = load_task(FIXTURE_TASK)
+
+    def test_matching_is_casefolded_but_hyphen_sensitive(self) -> None:
+        first_claim = self.task.required_claims[0].model_copy(
+            update={"evidence_patterns": ["ADD-only", "in context"]}
+        )
+        task = self.task.model_copy(
+            update={
+                "required_claims": [
+                    first_claim,
+                    *self.task.required_claims[1:],
+                ]
+            }
+        )
+        report = audit_evidence_patterns(
+            [task],
+            {
+                "src_mem0_docs": "add-ONLY and in-context",
+                "src_mem0_paper": "can add an optional graph layer",
+            },
+        )
+        self.assertFalse(report["passed"])
+        self.assertEqual(report["patterns"], 3)
+        self.assertEqual(report["missing_patterns"], 1)
+        self.assertEqual(report["missing"][0]["pattern"], "in context")
+        self.assertFalse(report["claims"][0]["passed"])
+        self.assertTrue(report["claims"][1]["passed"])
+        self.assertRegex(
+            report["source_hashes"]["src_mem0_docs"],
+            r"^sha256:[0-9a-f]{64}$",
+        )
+
+    def test_missing_source_text_fails_closed(self) -> None:
+        with self.assertRaisesRegex(ValueError, "src_mem0_paper"):
+            audit_evidence_patterns(
+                [self.task],
+                {"src_mem0_docs": "stores memories in a vector store"},
+            )
+
+    def test_source_mapping_parser_rejects_duplicates_and_bad_specs(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            source_path = Path(temp_dir) / "source.md"
+            source_path.write_text("source text", encoding="utf-8")
+            spec = f"source={source_path}"
+            self.assertEqual(load_source_texts([spec]), {"source": "source text"})
+            with self.assertRaisesRegex(ValueError, "duplicate"):
+                load_source_texts([spec, spec])
+            with self.assertRaisesRegex(ValueError, "expected SOURCE_ID=PATH"):
+                load_source_texts(["not-a-mapping"])

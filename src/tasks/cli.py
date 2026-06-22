@@ -9,6 +9,7 @@ from typing import Any
 
 from .load import load_task
 from .models import BenchmarkTask
+from .preflight import audit_evidence_patterns
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -17,6 +18,15 @@ def build_parser() -> argparse.ArgumentParser:
     for command in ("validate", "freeze-plan"):
         command_parser = subparsers.add_parser(command)
         command_parser.add_argument("tasks", nargs="+", type=Path)
+    preflight_parser = subparsers.add_parser("preflight-patterns")
+    preflight_parser.add_argument("tasks", nargs="+", type=Path)
+    preflight_parser.add_argument(
+        "--source",
+        action="append",
+        required=True,
+        metavar="SOURCE_ID=PATH",
+        help="map a task source ID to fetched or frozen source text",
+    )
     return parser
 
 
@@ -88,6 +98,20 @@ def build_freeze_plan(tasks: list[BenchmarkTask]) -> dict[str, Any]:
     }
 
 
+def load_source_texts(specs: list[str]) -> dict[str, str]:
+    source_texts: dict[str, str] = {}
+    for spec in specs:
+        source_id, separator, raw_path = spec.partition("=")
+        if not separator or not source_id or not raw_path:
+            raise ValueError(
+                f"invalid --source {spec!r}; expected SOURCE_ID=PATH"
+            )
+        if source_id in source_texts:
+            raise ValueError(f"duplicate --source mapping for {source_id}")
+        source_texts[source_id] = Path(raw_path).read_text(encoding="utf-8")
+    return source_texts
+
+
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     tasks = [load_task(path) for path in args.tasks]
@@ -105,10 +129,15 @@ def main(argv: list[str] | None = None) -> int:
                 for path, task in zip(args.tasks, tasks, strict=True)
             ],
         }
-    else:
+    elif args.command == "freeze-plan":
         payload = build_freeze_plan(tasks)
+    else:
+        payload = audit_evidence_patterns(
+            tasks,
+            load_source_texts(args.source),
+        )
     print(json.dumps(payload, indent=2))
-    return 0
+    return 0 if payload.get("passed", True) else 1
 
 
 if __name__ == "__main__":

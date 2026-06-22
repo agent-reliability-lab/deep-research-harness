@@ -72,6 +72,31 @@ python -m src.tasks.cli freeze-plan data/tasks/drafts/*.json
 lists every task that depends on each source. It rejects conflicting URLs,
 source types, or URL-check dates for the same source ID.
 
+## Preflight evidence patterns against fetched text
+
+Before freezing, fetch the official Markdown into a temporary or gitignored
+location, then audit every draft claim:
+
+```bash
+curl -fsSL https://docs.mem0.ai/core-concepts/memory-evaluation.md \
+  -o /tmp/mem0-memory-evaluation.md
+curl -fsSL https://docs.letta.com/guides/core-concepts/memory/memory-blocks.md \
+  -o /tmp/letta-memory-blocks.md
+curl -fsSL https://docs.letta.com/guides/core-concepts/memory/archival-memory.md \
+  -o /tmp/letta-archival-memory.md
+
+python -m src.tasks.cli preflight-patterns data/tasks/drafts/*.json \
+  --source mem0-memory-evaluation=/tmp/mem0-memory-evaluation.md \
+  --source letta-memory-blocks=/tmp/letta-memory-blocks.md \
+  --source letta-archival-memory=/tmp/letta-archival-memory.md
+```
+
+The preflight uses the same strict text rule as deterministic scoring:
+case-folding only. It does not normalize hyphens, whitespace, or punctuation.
+This is intentional: evidence patterns are exact source contracts, not fuzzy
+search hints. A successful live preflight still does not freeze a task; the
+snapshot hash and claim verification status remain separate gates.
+
 ## Convert a draft into a runnable task
 
 1. Fetch and clean each official page using the exact source ID from the plan.
