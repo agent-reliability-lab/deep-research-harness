@@ -1,0 +1,875 @@
+{
+  "schema_version": "0.4.0",
+  "task_id": "memory-architecture-survey-01",
+  "task_version": "0.1.0",
+  "rubric_version": "0.3.0",
+  "lifecycle": "frozen",
+  "family": "architecture_comparison",
+  "prompt": "Survey and compare four AI-agent memory systems — Mem0, Letta (including its MemGPT origin paper), Zep (Graphiti), and Cognee — across four architectural dimensions: (1) context_placement (where persistent memory lives relative to the LLM's context window — in-context vs. external store), (2) write_update (how new information is written and how existing memory is updated — overwrite, append/ADD-only, LLM-driven consolidation, edge invalidation, etc.), (3) retrieval (how memory is selected and returned at query time — semantic/vector, keyword/BM25, graph traversal, hybrid fusion, reranking), and (4) temporal (how the system tracks time, validity, and contradictions).\n\nFor EVERY claim you make, cite the specific frozen source it comes from (use the provided source_id) and ground it in verbatim evidence from that source — do not paraphrase away the exact wording. You must read the underlying sources to support each claim rather than relying on general knowledge.\n\nOrganize the survey so each of the four dimensions is compared across the products that have relevant evidence, and explicitly call out the architectural trade-offs between the approaches (e.g., always-visible in-context memory vs. on-demand external retrieval; overwrite/last-write-wins vs. ADD-only/non-lossy preservation; precision-optimized vs. recall-optimized retrieval; bi-temporal validity tracking vs. no temporal model).\n\nDo NOT recommend a single winner or declare one product \"best.\" Instead, identify the trade-offs and the conditions under which each design choice is advantageous. Where two products appear similar (e.g., both use BM25, both use a graph), distinguish them precisely using the source evidence rather than conflating them.",
+  "fixture_only": false,
+  "evaluation_mode": "deterministic_benchmark",
+  "source_snapshot_id": "memory-architecture-mvp2-2026-06-22-v1",
+  "source_requirements": [
+    {
+      "source_id": "mem0-platform-overview",
+      "source_type": "official_docs",
+      "canonical_url": "https://docs.mem0.ai/platform/overview",
+      "url_checked_at": "2026-06-22",
+      "required_topics": [
+        "context_placement"
+      ],
+      "selection_rationale": "Frozen official source for mem0-platform-overview memory-architecture claims."
+    },
+    {
+      "source_id": "mem0-graph-memory",
+      "source_type": "official_docs",
+      "canonical_url": "https://docs.mem0.ai/platform/features/graph-memory",
+      "url_checked_at": "2026-06-22",
+      "required_topics": [
+        "retrieval"
+      ],
+      "selection_rationale": "Frozen official source for mem0-graph-memory memory-architecture claims."
+    },
+    {
+      "source_id": "mem0-paper-2025",
+      "source_type": "research_paper",
+      "canonical_url": "https://arxiv.org/abs/2504.19413",
+      "url_checked_at": "2026-06-22",
+      "required_topics": [
+        "write_update"
+      ],
+      "selection_rationale": "Frozen official source for mem0-paper-2025 memory-architecture claims."
+    },
+    {
+      "source_id": "mem0-memory-evaluation",
+      "source_type": "official_docs",
+      "canonical_url": "https://docs.mem0.ai/core-concepts/memory-evaluation",
+      "url_checked_at": "2026-06-22",
+      "required_topics": [
+        "write_update"
+      ],
+      "selection_rationale": "Frozen official source for mem0-memory-evaluation memory-architecture claims."
+    },
+    {
+      "source_id": "letta-memory-blocks",
+      "source_type": "official_docs",
+      "canonical_url": "https://docs.letta.com/guides/core-concepts/memory/memory-blocks",
+      "url_checked_at": "2026-06-22",
+      "required_topics": [
+        "context_placement",
+        "write_update"
+      ],
+      "selection_rationale": "Frozen official source for letta-memory-blocks memory-architecture claims."
+    },
+    {
+      "source_id": "letta-archival-memory",
+      "source_type": "official_docs",
+      "canonical_url": "https://docs.letta.com/guides/core-concepts/memory/archival-memory",
+      "url_checked_at": "2026-06-22",
+      "required_topics": [
+        "retrieval"
+      ],
+      "selection_rationale": "Frozen official source for letta-archival-memory memory-architecture claims."
+    },
+    {
+      "source_id": "letta-context-hierarchy",
+      "source_type": "official_docs",
+      "canonical_url": "https://docs.letta.com/guides/core-concepts/memory/context-hierarchy/",
+      "url_checked_at": "2026-06-22",
+      "required_topics": [
+        "context_placement"
+      ],
+      "selection_rationale": "Frozen official source for letta-context-hierarchy memory-architecture claims."
+    },
+    {
+      "source_id": "letta-stateful-agents",
+      "source_type": "official_docs",
+      "canonical_url": "https://docs.letta.com/guides/core-concepts/stateful-agents/",
+      "url_checked_at": "2026-06-22",
+      "required_topics": [
+        "context_placement"
+      ],
+      "selection_rationale": "Frozen official source for letta-stateful-agents memory-architecture claims."
+    },
+    {
+      "source_id": "memgpt-paper-2023",
+      "source_type": "research_paper",
+      "canonical_url": "https://arxiv.org/abs/2310.08560",
+      "url_checked_at": "2026-06-22",
+      "required_topics": [
+        "write_update"
+      ],
+      "selection_rationale": "Frozen official source for memgpt-paper-2023 memory-architecture claims."
+    },
+    {
+      "source_id": "zep-graphiti-overview",
+      "source_type": "official_docs",
+      "canonical_url": "https://help.getzep.com/graphiti/getting-started/overview",
+      "url_checked_at": "2026-06-22",
+      "required_topics": [
+        "temporal"
+      ],
+      "selection_rationale": "Frozen official source for zep-graphiti-overview memory-architecture claims."
+    },
+    {
+      "source_id": "zep-paper-2025",
+      "source_type": "research_paper",
+      "canonical_url": "https://arxiv.org/abs/2501.13956",
+      "url_checked_at": "2026-06-22",
+      "required_topics": [
+        "context_placement"
+      ],
+      "selection_rationale": "Frozen official source for zep-paper-2025 memory-architecture claims."
+    },
+    {
+      "source_id": "zep-key-concepts",
+      "source_type": "official_docs",
+      "canonical_url": "https://help.getzep.com/concepts",
+      "url_checked_at": "2026-06-22",
+      "required_topics": [
+        "write_update"
+      ],
+      "selection_rationale": "Frozen official source for zep-key-concepts memory-architecture claims."
+    },
+    {
+      "source_id": "zep-retrieval-philosophy",
+      "source_type": "official_docs",
+      "canonical_url": "https://help.getzep.com/retrieval-philosophy",
+      "url_checked_at": "2026-06-22",
+      "required_topics": [
+        "retrieval"
+      ],
+      "selection_rationale": "Frozen official source for zep-retrieval-philosophy memory-architecture claims."
+    },
+    {
+      "source_id": "cognee-architecture",
+      "source_type": "official_docs",
+      "canonical_url": "https://docs.cognee.ai/core-concepts/architecture",
+      "url_checked_at": "2026-06-22",
+      "required_topics": [
+        "context_placement"
+      ],
+      "selection_rationale": "Frozen official source for cognee-architecture memory-architecture claims."
+    },
+    {
+      "source_id": "cognee-introduction",
+      "source_type": "official_docs",
+      "canonical_url": "https://docs.cognee.ai/getting-started/introduction",
+      "url_checked_at": "2026-06-22",
+      "required_topics": [
+        "write_update"
+      ],
+      "selection_rationale": "Frozen official source for cognee-introduction memory-architecture claims."
+    },
+    {
+      "source_id": "cognee-pipelines",
+      "source_type": "official_docs",
+      "canonical_url": "https://docs.cognee.ai/core-concepts/building-blocks/pipelines",
+      "url_checked_at": "2026-06-22",
+      "required_topics": [
+        "write_update"
+      ],
+      "selection_rationale": "Frozen official source for cognee-pipelines memory-architecture claims."
+    },
+    {
+      "source_id": "letta-external-memory-integration",
+      "source_type": "official_docs",
+      "canonical_url": "https://docs.letta.com/tutorials/integrations/external-memory",
+      "url_checked_at": "2026-06-22",
+      "required_topics": [
+        "retrieval"
+      ],
+      "selection_rationale": "Frozen official source for letta-external-memory-integration memory-architecture claims."
+    }
+  ],
+  "required_claims": [
+    {
+      "claim_id": "platform-vector-store-hosted",
+      "description": "Mem0 Platform stores persistent memory in a hosted vector store outside the agent's prompt, so memories persist across users and agents and cut prompt bloat instead of living in the active context window.",
+      "verification_status": "verified",
+      "scoring_method": "pattern_contract",
+      "acceptable_source_ids": [
+        "mem0-platform-overview"
+      ],
+      "evidence_patterns": [
+        "Mem0 runs the vector store and rerankers",
+        "Memories persist across users and agents, cutting prompt bloat"
+      ],
+      "answer_pattern_groups": [
+        [
+          "vector store"
+        ],
+        [
+          "hosted",
+          "managed service",
+          "Mem0 runs"
+        ],
+        [
+          "persists across users and agents",
+          "persistent across users and agents",
+          "memories persist"
+        ],
+        [
+          "cutting prompt bloat",
+          "cuts prompt bloat",
+          "outside the prompt",
+          "external memory"
+        ]
+      ]
+    },
+    {
+      "claim_id": "graph-native-entity-linking",
+      "description": "Mem0 builds a native graph where extracted entities become nodes and memories sharing an entity are connected; at search time connected memories get a ranking boost combined with semantic (vector) and keyword (BM25) scores into a single score, with no external graph database to provision.",
+      "verification_status": "verified",
+      "scoring_method": "pattern_contract",
+      "acceptable_source_ids": [
+        "mem0-graph-memory"
+      ],
+      "evidence_patterns": [
+        "memories that share an entity are connected",
+        "with no external graph database to provision"
+      ],
+      "answer_pattern_groups": [
+        [
+          "graph memory",
+          "native graph"
+        ],
+        [
+          "entities become nodes",
+          "entity nodes",
+          "entity linking"
+        ],
+        [
+          "share an entity",
+          "sharing an entity",
+          "connected memories"
+        ],
+        [
+          "ranking boost",
+          "boosted"
+        ],
+        [
+          "semantic",
+          "vector similarity"
+        ],
+        [
+          "BM25",
+          "keyword"
+        ],
+        [
+          "combined score"
+        ],
+        [
+          "no external graph database",
+          "without an external graph database"
+        ]
+      ]
+    },
+    {
+      "claim_id": "paper-two-phase-extract-update",
+      "description": "In the Mem0 paper architecture the pipeline has two phases (extraction and update); during update, each candidate fact is compared against the top s semantically similar memories and an LLM tool call selects one of four operations: ADD, UPDATE, DELETE, or NOOP.",
+      "verification_status": "verified",
+      "scoring_method": "pattern_contract",
+      "acceptable_source_ids": [
+        "mem0-paper-2025"
+      ],
+      "evidence_patterns": [
+        "The LLM itself determines which of four distinct operations",
+        "ADD for creation of new memories when no semantically equivalent memory exists",
+        "the system first retrieves the top s semantically similar memories using vector embeddings from the database"
+      ],
+      "answer_pattern_groups": [
+        [
+          "extraction and update",
+          "two phases",
+          "two-phase"
+        ],
+        [
+          "top s semantically similar",
+          "semantically similar memories"
+        ],
+        [
+          "tool call",
+          "function call"
+        ],
+        [
+          "ADD"
+        ],
+        [
+          "UPDATE"
+        ],
+        [
+          "DELETE"
+        ],
+        [
+          "NOOP"
+        ]
+      ]
+    },
+    {
+      "claim_id": "eval-add-only-no-overwrite",
+      "description": "The newer evaluated Mem0 algorithm uses ADD-only extraction: new facts are stored alongside old ones and nothing is overwritten or deleted, so when information changes both old and new facts survive, preserving temporal context.",
+      "verification_status": "verified",
+      "scoring_method": "pattern_contract",
+      "acceptable_source_ids": [
+        "mem0-memory-evaluation"
+      ],
+      "evidence_patterns": [
+        "The key architectural decision is ADD-only extraction. New facts are stored alongside old ones — nothing is overwritten or deleted",
+        "When information changes, both the old and new facts survive. This preserves temporal context and eliminates information loss from premature consolidation"
+      ],
+      "answer_pattern_groups": [
+        [
+          "ADD-only"
+        ],
+        [
+          "stored alongside old",
+          "old and new facts coexist",
+          "old and new facts survive"
+        ],
+        [
+          "nothing is overwritten",
+          "nothing overwritten",
+          "not overwritten"
+        ],
+        [
+          "nothing is deleted",
+          "nothing deleted",
+          "not deleted"
+        ],
+        [
+          "preserves temporal context",
+          "preserving temporal context"
+        ]
+      ]
+    },
+    {
+      "claim_id": "letta-blocks-always-visible",
+      "description": "Letta memory blocks are structured sections of the agent's context window that persist across all interactions and are always visible, requiring no retrieval.",
+      "verification_status": "verified",
+      "scoring_method": "pattern_contract",
+      "acceptable_source_ids": [
+        "letta-memory-blocks"
+      ],
+      "evidence_patterns": [
+        "Memory blocks are structured sections of the agent’s context window that persist across all interactions. They are always visible - no retrieval needed."
+      ],
+      "answer_pattern_groups": [
+        [
+          "memory blocks"
+        ],
+        [
+          "in context window",
+          "context window"
+        ],
+        [
+          "persist across all interactions",
+          "persistent across interactions"
+        ],
+        [
+          "always visible"
+        ],
+        [
+          "no retrieval",
+          "without retrieval"
+        ]
+      ]
+    },
+    {
+      "claim_id": "letta-blocks-write-overwrite",
+      "description": "Updating a Letta memory block's value completely replaces the entire block content rather than appending, and with concurrent modification the last write wins.",
+      "verification_status": "verified",
+      "scoring_method": "pattern_contract",
+      "acceptable_source_ids": [
+        "letta-memory-blocks"
+      ],
+      "evidence_patterns": [
+        "Setting value completely replaces the entire block content - it is not an append operation.",
+        "the last write wins and overwrites all earlier changes"
+      ],
+      "answer_pattern_groups": [
+        [
+          "overwrite",
+          "replace",
+          "replaces"
+        ],
+        [
+          "entire block",
+          "entire block content"
+        ],
+        [
+          "not append",
+          "not an append",
+          "rather than appending"
+        ],
+        [
+          "last write wins"
+        ]
+      ]
+    },
+    {
+      "claim_id": "letta-archival-semantic-search",
+      "description": "Letta archival memory is a semantically searchable database queried on-demand via tools; its fragments cannot be pinned to the context window.",
+      "verification_status": "verified",
+      "scoring_method": "pattern_contract",
+      "acceptable_source_ids": [
+        "letta-archival-memory"
+      ],
+      "evidence_patterns": [
+        "Archival memory is a semantically searchable database where agents can store facts, knowledge, and information for long-term retrieval.",
+        "archival memory fragments cannot be pinned to the context window, and must be queried on-demand via tools"
+      ],
+      "answer_pattern_groups": [
+        [
+          "semantic search",
+          "semantically searchable"
+        ],
+        [
+          "queried on-demand",
+          "on-demand"
+        ],
+        [
+          "via tools",
+          "using tools"
+        ],
+        [
+          "cannot be pinned",
+          "not pinned to context"
+        ]
+      ]
+    },
+    {
+      "claim_id": "letta-archival-out-of-context",
+      "description": "In Letta's hierarchy, archival memory is read-write but not in-context (accessed only via tools), in contrast to memory blocks which are in-context.",
+      "verification_status": "verified",
+      "scoring_method": "pattern_contract",
+      "acceptable_source_ids": [
+        "letta-context-hierarchy"
+      ],
+      "evidence_patterns": [
+        "You can write to archival memory for the agent to later query via built-in tools",
+        "it is best to simply place everything into the context window with memory blocks"
+      ],
+      "answer_pattern_groups": [
+        [
+          "archival memory"
+        ],
+        [
+          "not in-context",
+          "not in context"
+        ],
+        [
+          "query via tools",
+          "via built-in tools",
+          "accessed via tools"
+        ],
+        [
+          "memory blocks in-context",
+          "memory blocks are in context",
+          "memory blocks in the context window"
+        ]
+      ]
+    },
+    {
+      "claim_id": "letta-stateful-persist-db",
+      "description": "In Letta all state is persisted in a database and never lost even when evicted from the context window, while important core memories are injected into the LLM's context window and attached memory blocks are pinned to the system prompt.",
+      "verification_status": "verified",
+      "scoring_method": "pattern_contract",
+      "acceptable_source_ids": [
+        "letta-stateful-agents"
+      ],
+      "evidence_patterns": [
+        "all state, includes memories, user messages, reasoning, tool calls, are all persisted in a database, so they are never lost, even once evicted from the context window",
+        "Important “core” memories are injected into the context window of the LLM, and the agent can modify its own memories through tools"
+      ],
+      "answer_pattern_groups": [
+        [
+          "persisted in database",
+          "persisted in a database"
+        ],
+        [
+          "never lost"
+        ],
+        [
+          "evicted from context",
+          "evicted from the context window"
+        ],
+        [
+          "core memory injected",
+          "core memories are injected"
+        ],
+        [
+          "pinned to system prompt",
+          "pinned to the system prompt"
+        ]
+      ]
+    },
+    {
+      "claim_id": "letta-external-default-and-providers",
+      "description": "By default Letta agents store memories in Letta's built-in storage, but external memory providers (MongoDB, Graphiti, Weaviate, Mem0, Zep) can be integrated via custom tools to store and retrieve memories in your own infrastructure.",
+      "verification_status": "verified",
+      "scoring_method": "pattern_contract",
+      "acceptable_source_ids": [
+        "letta-external-memory-integration"
+      ],
+      "evidence_patterns": [
+        "By default, Letta agents store memories in Letta’s built-in storage system",
+        "integrate external memory providers to store and retrieve agent memories in your own infrastructure",
+        "We’ll implement custom tools for five different memory providers"
+      ],
+      "answer_pattern_groups": [
+        [
+          "built-in storage",
+          "default storage"
+        ],
+        [
+          "external memory providers",
+          "external providers"
+        ],
+        [
+          "custom tools"
+        ],
+        [
+          "own infrastructure",
+          "your infrastructure"
+        ]
+      ]
+    },
+    {
+      "claim_id": "memgpt-self-directed-paging",
+      "description": "In MemGPT, memory edits and retrieval are self-directed: the LLM uses function calls to autonomously move data between main and external context, and the queue manager evicts messages under memory-pressure thresholds, generating a recursive summary while preserving evicted messages indefinitely in recall storage.",
+      "verification_status": "verified",
+      "scoring_method": "pattern_contract",
+      "acceptable_source_ids": [
+        "memgpt-paper-2023"
+      ],
+      "evidence_patterns": [
+        "MemGPT orchestrates data movement between main context and external context via function calls that are generated by the LLM processor.",
+        "generates a new recursive summary using the existing recursive summary and evicted messages",
+        "they are stored indefinitely in recall storage and readable via MemGPT function calls"
+      ],
+      "answer_pattern_groups": [
+        [
+          "self-directed"
+        ],
+        [
+          "function calls",
+          "LLM function calls"
+        ],
+        [
+          "main context",
+          "main and external context"
+        ],
+        [
+          "external context"
+        ],
+        [
+          "memory pressure",
+          "memory-pressure"
+        ],
+        [
+          "evicts",
+          "eviction"
+        ],
+        [
+          "recursive summary"
+        ],
+        [
+          "recall storage"
+        ]
+      ]
+    },
+    {
+      "claim_id": "zep-overview-bitemporal-invalidation",
+      "description": "Graphiti uses explicit bi-temporal tracking and handles contradictions via temporal edge invalidation, with graph edges carrying temporal metadata to record relationship lifecycles.",
+      "verification_status": "verified",
+      "scoring_method": "pattern_contract",
+      "acceptable_source_ids": [
+        "zep-graphiti-overview"
+      ],
+      "evidence_patterns": [
+        "Explicit bi-temporal tracking",
+        "Temporal edge invalidation"
+      ],
+      "answer_pattern_groups": [
+        [
+          "bi-temporal"
+        ],
+        [
+          "edge invalidation",
+          "temporal edge invalidation"
+        ],
+        [
+          "temporal metadata",
+          "relationship lifecycle",
+          "relationship lifecycles"
+        ]
+      ]
+    },
+    {
+      "claim_id": "zep-paper-three-tier-graph",
+      "description": "In Zep, memory is a temporally-aware dynamic knowledge graph comprising three hierarchical tiers of subgraphs: an episode subgraph, a semantic entity subgraph, and a community subgraph.",
+      "verification_status": "verified",
+      "scoring_method": "pattern_contract",
+      "acceptable_source_ids": [
+        "zep-paper-2025"
+      ],
+      "evidence_patterns": [
+        "This graph comprises three hierarchical tiers of subgraphs: an episode subgraph, a semantic entity subgraph, and a community subgraph.",
+        "In Zep, memory is powered by a temporally-aware dynamic knowledge graph"
+      ],
+      "answer_pattern_groups": [
+        [
+          "knowledge graph",
+          "dynamic knowledge graph"
+        ],
+        [
+          "temporally-aware",
+          "temporally aware"
+        ],
+        [
+          "three tiers",
+          "three hierarchical tiers"
+        ],
+        [
+          "episode subgraph",
+          "episode"
+        ],
+        [
+          "semantic entity subgraph",
+          "semantic entity"
+        ],
+        [
+          "community subgraph",
+          "community"
+        ]
+      ]
+    },
+    {
+      "claim_id": "zep-key-concepts-fact-invalidation",
+      "description": "When new data invalidates a prior fact in the Context Graph, the time the fact became invalid is stored on that fact's edge, and the graph preserves history while invalidating outdated facts.",
+      "verification_status": "verified",
+      "scoring_method": "pattern_contract",
+      "acceptable_source_ids": [
+        "zep-key-concepts"
+      ],
+      "evidence_patterns": [
+        "the graph updates dynamically as new data arrives, invalidating outdated facts while preserving history"
+      ],
+      "answer_pattern_groups": [
+        [
+          "new data",
+          "new data arrives"
+        ],
+        [
+          "invalidating outdated facts",
+          "fact invalidation",
+          "invalidates a prior fact"
+        ],
+        [
+          "stored on the edge",
+          "stored on that fact's edge",
+          "invalidation time"
+        ],
+        [
+          "preserves history",
+          "preserving history"
+        ]
+      ]
+    },
+    {
+      "claim_id": "zep-retrieval-recall-over-precision",
+      "description": "Zep's retrieval system is deliberately optimized for high recall and low latency (sub-200ms), differing from systems optimized for precision, so agents receive complete context.",
+      "verification_status": "verified",
+      "scoring_method": "pattern_contract",
+      "acceptable_source_ids": [
+        "zep-retrieval-philosophy"
+      ],
+      "evidence_patterns": [
+        "Zep's retrieval system is designed with two primary goals: high recall and low latency. This is a deliberate architectural choice that differs from systems optimized for precision."
+      ],
+      "answer_pattern_groups": [
+        [
+          "high recall"
+        ],
+        [
+          "low latency",
+          "sub-200ms"
+        ],
+        [
+          "not precision",
+          "differs from systems optimized for precision",
+          "rather than precision"
+        ],
+        [
+          "complete context"
+        ]
+      ]
+    },
+    {
+      "claim_id": "cognee-arch-stores",
+      "description": "Cognee stores persistent memory across three complementary storage systems: a relational store for documents/chunks/provenance, a vector store for embeddings, and a graph store for entities and relationships.",
+      "verification_status": "verified",
+      "scoring_method": "pattern_contract",
+      "acceptable_source_ids": [
+        "cognee-architecture"
+      ],
+      "evidence_patterns": [
+        "Cognee combines three complementary storage systems",
+        "Vector store — Holds embeddings for semantic similarity"
+      ],
+      "answer_pattern_groups": [
+        [
+          "three stores",
+          "three complementary storage systems"
+        ],
+        [
+          "relational",
+          "relational store"
+        ],
+        [
+          "documents",
+          "chunks",
+          "provenance"
+        ],
+        [
+          "vector store",
+          "embeddings"
+        ],
+        [
+          "graph store",
+          "knowledge graph"
+        ],
+        [
+          "entities and relationships",
+          "entities",
+          "relationships"
+        ]
+      ]
+    },
+    {
+      "claim_id": "cognee-intro-remember-improve",
+      "description": "Cognee's .remember operation ingests, chunks, extracts entities, and builds the knowledge graph in one call, supporting permanent graph memory or fast session memory; .improve bridges short-term session memory into the permanent graph.",
+      "verification_status": "verified",
+      "scoring_method": "pattern_contract",
+      "acceptable_source_ids": [
+        "cognee-introduction"
+      ],
+      "evidence_patterns": [
+        "It ingests, chunks, extracts entities, and builds the knowledge graph for you in one call. Supports permanent graph memory or fast session memory."
+      ],
+      "answer_pattern_groups": [
+        [
+          ".remember",
+          "remember"
+        ],
+        [
+          "ingests",
+          "ingest"
+        ],
+        [
+          "chunks",
+          "chunking"
+        ],
+        [
+          "extracts entities",
+          "entity extraction"
+        ],
+        [
+          "builds the knowledge graph",
+          "build the knowledge graph"
+        ],
+        [
+          "session memory",
+          "short-term session memory"
+        ],
+        [
+          "permanent graph",
+          "permanent graph memory"
+        ],
+        [
+          ".improve",
+          "improve"
+        ],
+        [
+          "bridges",
+          "bridge"
+        ]
+      ]
+    },
+    {
+      "claim_id": "cognee-pipelines-cache",
+      "description": "With use_pipeline_cache=True, Cognee checks the relational database for the most recent run status and skips re-processing a dataset already processed, returning the cached result instead of re-running tasks.",
+      "verification_status": "verified",
+      "scoring_method": "pattern_contract",
+      "acceptable_source_ids": [
+        "cognee-pipelines"
+      ],
+      "evidence_patterns": [
+        "Cognee checks the relational database for the most recent run of pipeline_name on the target dataset before executing",
+        "the pipeline yields the cached result and returns immediately without re-running the tasks"
+      ],
+      "answer_pattern_groups": [
+        [
+          "use_pipeline_cache"
+        ],
+        [
+          "relational database",
+          "most recent run"
+        ],
+        [
+          "skips re-processing",
+          "skip already processed",
+          "without re-running"
+        ],
+        [
+          "cached result",
+          "returns immediately"
+        ]
+      ]
+    }
+  ],
+  "acceptable_source_ids": [
+    "mem0-platform-overview",
+    "mem0-graph-memory",
+    "mem0-paper-2025",
+    "mem0-memory-evaluation",
+    "letta-memory-blocks",
+    "letta-archival-memory",
+    "letta-context-hierarchy",
+    "letta-stateful-agents",
+    "memgpt-paper-2023",
+    "zep-graphiti-overview",
+    "zep-paper-2025",
+    "zep-key-concepts",
+    "zep-retrieval-philosophy",
+    "cognee-architecture",
+    "cognee-introduction",
+    "cognee-pipelines",
+    "letta-external-memory-integration"
+  ],
+  "known_distractors": [
+    "Claiming Letta's primary memory model is an external vector store that retrieves a small top-K subset per query like Mem0. This is false: per letta-memory-blocks and letta-stateful-agents, Letta's memory blocks are in-context (pinned to the system prompt) and always visible with NO retrieval; it is Mem0 (mem0-platform-overview / mem0-memory-evaluation) that retrieves a relevant subset from an external store rather than keeping memory always-visible.",
+    "Claiming Mem0's evaluated platform algorithm overwrites or deletes outdated facts using LLM-chosen UPDATE/DELETE operations. This conflates two distinct Mem0 sources: the LLM-driven ADD/UPDATE/DELETE/NOOP tool call belongs to the mem0-paper-2025 architecture, whereas the newer evaluated algorithm (mem0-memory-evaluation) is explicitly ADD-only where 'nothing is overwritten or deleted.'",
+    "Claiming Letta memory blocks support appending new content and merge concurrent edits. This is false per letta-memory-blocks: setting a block value 'completely replaces the entire block content - it is not an append operation' and on concurrent modification 'the last write wins and overwrites all earlier changes.'",
+    "Claiming Zep keeps all of an agent's memory persistently visible inside the LLM context window. This is false: per zep-key-concepts Zep assembles a compact Context Block served from a governed Context Lake, i.e. memory lives outside the context window and only the most relevant facts are provided per turn — the always-visible-in-context model belongs to Letta's memory blocks (letta-memory-blocks), not Zep.",
+    "Claiming Cognee uses an explicit bi-temporal model with edge invalidation timestamps to track when facts become valid and invalid. This is false: bi-temporal tracking and temporal edge invalidation are Zep/Graphiti properties (zep-graphiti-overview, zep-key-concepts); Cognee's documented stores (cognee-architecture) are relational, vector, and graph with no bi-temporal validity model described in the sources.",
+    "Claiming Zep's retrieval is optimized for precision and requires an LLM-in-the-loop reranking step. This is false on both counts: zep-retrieval-philosophy states it is deliberately optimized for 'high recall and low latency' and explicitly 'differs from systems optimized for precision,' and zep-graphiti-overview states its hybrid search returns a single ranked answer 'with no LLM-in-the-loop reranking.'"
+  ],
+  "required_comparison_dimensions": [
+    "context_placement",
+    "write_update",
+    "retrieval",
+    "temporal"
+  ],
+  "citation_expectations": {
+    "minimum_citations": 14,
+    "minimum_unique_sources": 14
+  },
+  "rubric": {
+    "minimum_required_claim_coverage": 1.0,
+    "minimum_citation_precision": 1.0,
+    "minimum_citation_entailment": 1.0,
+    "maximum_distractor_mentions": 0
+  }
+}

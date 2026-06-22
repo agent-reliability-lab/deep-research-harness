@@ -38,10 +38,57 @@ FIXTURE_MANIFEST = (
     ROOT / "data" / "fixtures" / "source_snapshots" / "manifest.json"
 )
 
+# Pinned scenario task sets. These contract tests assert on a fixed scenario,
+# not the evolving live corpus, so adding or freezing new tasks elsewhere does
+# not silently change them.
+JUDGE_DRAFT_TASKS = (
+    DRAFT_DIR / "architecture-01-memory-placement.json",
+    DRAFT_DIR / "architecture-02-retrieval-control.json",
+)
+FROZEN_DETERMINISTIC_TASKS = (
+    FROZEN_DIR / "memory-lifecycle-01-mem0-add-only.json",
+    FROZEN_DIR / "retrieval-ranking-01-letta-context-boundary.json",
+)
+FREEZE_PLAN_SCENARIO_TASKS = (*JUDGE_DRAFT_TASKS, *FROZEN_DETERMINISTIC_TASKS)
+SURVEY_TASK = FROZEN_DIR / "memory-architecture-survey-01.json"
+
 
 class TaskLifecycleTests(TestCase):
+    def test_survey_task_requires_multiple_answer_concepts_per_claim(
+        self,
+    ) -> None:
+        task = load_task(SURVEY_TASK)
+        self.assertEqual(task.task_id, "memory-architecture-survey-01")
+        self.assertIs(task.lifecycle, TaskLifecycle.FROZEN)
+        self.assertEqual(
+            task.source_snapshot_id,
+            "memory-architecture-mvp2-2026-06-22-v1",
+        )
+        self.assertEqual(len(task.required_claims), 18)
+        self.assertEqual(len(task.source_requirements), 17)
+        self.assertTrue(
+            all(
+                claim.verification_status
+                is ClaimVerificationStatus.VERIFIED
+                for claim in task.required_claims
+            )
+        )
+        self.assertTrue(
+            all(
+                claim.scoring_method is ClaimScoringMethod.PATTERN_CONTRACT
+                for claim in task.required_claims
+            )
+        )
+        self.assertTrue(
+            all(
+                len(claim.answer_pattern_groups) >= 3
+                for claim in task.required_claims
+            ),
+            "one synonym group must not satisfy a multi-concept survey claim",
+        )
+
     def test_two_judge_drafts_load_but_are_not_freeze_ready(self) -> None:
-        tasks = [load_task(path) for path in sorted(DRAFT_DIR.glob("*.json"))]
+        tasks = [load_task(path) for path in JUDGE_DRAFT_TASKS]
         self.assertEqual(len(tasks), 2)
         self.assertTrue(
             all(task.lifecycle is TaskLifecycle.DRAFT for task in tasks)
@@ -66,7 +113,7 @@ class TaskLifecycleTests(TestCase):
     def test_two_deterministic_tasks_are_frozen_against_public_manifest(
         self,
     ) -> None:
-        tasks = [load_task(path) for path in sorted(FROZEN_DIR.glob("*.json"))]
+        tasks = [load_task(path) for path in FROZEN_DETERMINISTIC_TASKS]
         manifest = SnapshotManifest.model_validate_json(
             SOURCE_MANIFEST.read_text(encoding="utf-8")
         )
@@ -214,11 +261,7 @@ class TaskLifecycleTests(TestCase):
 
 class FreezePlanTests(TestCase):
     def setUp(self) -> None:
-        self.tasks = [
-            load_task(path)
-            for directory in (DRAFT_DIR, FROZEN_DIR)
-            for path in sorted(directory.glob("*.json"))
-        ]
+        self.tasks = [load_task(path) for path in FREEZE_PLAN_SCENARIO_TASKS]
 
     def test_plan_deduplicates_three_sources_across_four_tasks(self) -> None:
         plan = build_freeze_plan(self.tasks)
