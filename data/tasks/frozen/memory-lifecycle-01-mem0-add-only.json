@@ -1,14 +1,14 @@
 {
-  "schema_version": "0.3.0",
+  "schema_version": "0.4.0",
   "task_id": "memory-lifecycle-01-mem0-add-only",
   "task_version": "0.1.0",
-  "rubric_version": "0.1.0",
-  "lifecycle": "draft",
+  "rubric_version": "0.2.0",
+  "lifecycle": "frozen",
   "family": "memory_lifecycle",
   "prompt": "Using only the frozen Mem0 source, answer two questions: (1) When new information arrives, does the current extraction algorithm overwrite or delete old facts, and what does it do instead? (2) What stated benefit does this behavior provide? Give one cited evidence record per answer. Do not discuss benchmark scores or make product recommendations.",
   "fixture_only": false,
   "evaluation_mode": "deterministic_benchmark",
-  "source_snapshot_id": null,
+  "source_snapshot_id": "memory-systems-2026-06",
   "source_requirements": [
     {
       "source_id": "mem0-memory-evaluation",
@@ -27,7 +27,7 @@
     {
       "claim_id": "add-only-preserves-old-facts",
       "description": "The current Mem0 extraction path is ADD-only: new facts are stored alongside old ones, and old facts are not overwritten or deleted.",
-      "verification_status": "draft",
+      "verification_status": "verified",
       "scoring_method": "pattern_contract",
       "acceptable_source_ids": [
         "mem0-memory-evaluation"
@@ -37,17 +37,31 @@
         "stored alongside old ones",
         "nothing is overwritten or deleted"
       ],
-      "answer_patterns": [
-        "ADD-only",
-        "alongside old",
-        "not overwritten",
-        "not deleted"
+      "answer_pattern_groups": [
+        [
+          "ADD-only"
+        ],
+        [
+          "alongside old"
+        ],
+        [
+          "not overwritten",
+          "does not overwrite",
+          "without overwriting",
+          "nothing is overwritten"
+        ],
+        [
+          "not deleted",
+          "does not overwrite or delete",
+          "without overwriting or deleting",
+          "nothing is overwritten or deleted"
+        ]
       ]
     },
     {
       "claim_id": "temporal-context-benefit",
       "description": "Keeping both old and new facts preserves temporal context and avoids information loss from premature consolidation.",
-      "verification_status": "draft",
+      "verification_status": "verified",
       "scoring_method": "pattern_contract",
       "acceptable_source_ids": [
         "mem0-memory-evaluation"
@@ -57,10 +71,16 @@
         "eliminates information loss",
         "premature consolidation"
       ],
-      "answer_patterns": [
-        "temporal context",
-        "information loss",
-        "premature consolidation"
+      "answer_pattern_groups": [
+        [
+          "temporal context"
+        ],
+        [
+          "information loss"
+        ],
+        [
+          "premature consolidation"
+        ]
       ]
     }
   ],

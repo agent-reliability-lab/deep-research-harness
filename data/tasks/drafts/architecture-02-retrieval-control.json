@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.3.0",
+  "schema_version": "0.4.0",
   "task_id": "architecture-02-retrieval-control",
   "task_version": "0.1.0",
   "rubric_version": "0.2.0",
@@ -62,9 +62,13 @@
         "Entity Search",
         "final top-K set"
       ],
-      "answer_patterns": [
-        "multiple",
-        "retrieval"
+      "answer_pattern_groups": [
+        [
+          "multiple"
+        ],
+        [
+          "retrieval"
+        ]
       ]
     },
     {
@@ -82,9 +86,13 @@
         "always visible",
         "no retrieval needed"
       ],
-      "answer_patterns": [
-        "memory blocks",
-        "always visible"
+      "answer_pattern_groups": [
+        [
+          "memory blocks"
+        ],
+        [
+          "always visible"
+        ]
       ]
     },
     {
@@ -100,9 +108,13 @@
         "cannot be pinned to the context window",
         "queried on-demand via tools"
       ],
-      "answer_patterns": [
-        "archival memory",
-        "search"
+      "answer_pattern_groups": [
+        [
+          "archival memory"
+        ],
+        [
+          "search"
+        ]
       ]
     }
   ],

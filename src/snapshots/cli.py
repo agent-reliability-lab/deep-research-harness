@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 
 from .corpus import SnapshotCorpus, content_hash
+from .markdown import clean_markdown
 from .models import (
     CachedSource,
     RedistributionPolicy,
@@ -37,10 +38,21 @@ def build_parser() -> argparse.ArgumentParser:
     )
     add_parser.add_argument("--language", default="en")
     add_parser.add_argument("--license")
+    add_parser.add_argument(
+        "--excerpt",
+        help="explicit short public excerpt; defaults to the text prefix",
+    )
     add_parser.add_argument("--excerpt-chars", type=int, default=500)
 
     verify_parser = subparsers.add_parser("verify", help="verify every cache hash")
     verify_parser.add_argument("--manifest", type=Path, required=True)
+
+    clean_parser = subparsers.add_parser(
+        "clean-markdown",
+        help="convert fetched Markdown into stable visible text",
+    )
+    clean_parser.add_argument("--input", type=Path, required=True)
+    clean_parser.add_argument("--output", type=Path, required=True)
     return parser
 
 
@@ -57,6 +69,8 @@ def _load_or_create_manifest(path: Path, created_at: datetime) -> SnapshotManife
 def add_source(args: argparse.Namespace) -> None:
     if not 1 <= args.excerpt_chars <= 1200:
         raise SystemExit("--excerpt-chars must be between 1 and 1200")
+    if args.excerpt is not None and not 1 <= len(args.excerpt) <= 1200:
+        raise SystemExit("--excerpt must be between 1 and 1200 characters")
     retrieved_at = datetime.fromisoformat(args.retrieved_at.replace("Z", "+00:00"))
     cleaned_text = args.cleaned_text.read_text(encoding="utf-8")
     manifest = _load_or_create_manifest(args.manifest, retrieved_at)
@@ -70,7 +84,11 @@ def add_source(args: argparse.Namespace) -> None:
         canonical_url=args.url,
         retrieved_at=retrieved_at,
         content_hash=content_hash(cleaned_text),
-        excerpt=cleaned_text[: args.excerpt_chars].strip(),
+        excerpt=(
+            args.excerpt.strip()
+            if args.excerpt is not None
+            else cleaned_text[: args.excerpt_chars].strip()
+        ),
         source_type=args.source_type,
         version_or_pub_date=args.version_or_pub_date,
         redistribution_policy=args.redistribution_policy,
@@ -111,6 +129,22 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     if args.command == "add":
         add_source(args)
+        return 0
+    if args.command == "clean-markdown":
+        cleaned = clean_markdown(args.input.read_text(encoding="utf-8"))
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(cleaned, encoding="utf-8")
+        print(
+            json.dumps(
+                {
+                    "input": str(args.input),
+                    "output": str(args.output),
+                    "content_hash": content_hash(cleaned),
+                    "characters": len(cleaned),
+                },
+                indent=2,
+            )
+        )
         return 0
     corpus = SnapshotCorpus(args.manifest)
     corpus.verify_all()

@@ -243,7 +243,9 @@ The machine-readable task contract is exported as
 `deterministic_fixture` evaluator and are never eligible for the primary
 headline metric. Narrow real tasks whose full evidence contract can be
 specified in advance use `deterministic_benchmark`; a claim passes only when
-all answer patterns and all evidence patterns match. Broader tasks use
+all answer concept groups and all evidence patterns match. Each answer group
+may enumerate explicit acceptable phrasings, but the evaluator performs no
+global stemming or punctuation normalization. Broader tasks use
 `judge_required`, and the deterministic evaluator must reject them rather than
 substitute citation precision for entailment. Every run records an
 `evaluation_scope`, and metric aggregation rejects mixed scopes so fixture,

@@ -65,16 +65,23 @@ class RequiredClaim(StrictModel):
     scoring_method: ClaimScoringMethod
     acceptable_source_ids: list[str] = Field(min_length=1)
     evidence_patterns: list[str] = Field(min_length=1)
-    answer_patterns: list[str] = Field(min_length=1)
+    answer_pattern_groups: list[list[str]] = Field(min_length=1)
 
     @field_validator(
         "acceptable_source_ids",
         "evidence_patterns",
-        "answer_patterns",
     )
     @classmethod
     def require_unique_nonempty_values(cls, values: list[str]) -> list[str]:
         return _unique_nonempty(values)
+
+    @field_validator("answer_pattern_groups")
+    @classmethod
+    def require_nonempty_answer_pattern_groups(
+        cls,
+        groups: list[list[str]],
+    ) -> list[list[str]]:
+        return [_unique_nonempty(group) for group in groups]
 
 
 class CitationExpectations(StrictModel):
@@ -90,7 +97,7 @@ class TaskRubric(StrictModel):
 
 
 class BenchmarkTask(StrictModel):
-    schema_version: str = "0.3.0"
+    schema_version: str = "0.4.0"
     task_id: str = Field(min_length=1, pattern=r"^[a-z0-9][a-z0-9._-]*$")
     task_version: str = Field(pattern=r"^\d+\.\d+\.\d+$")
     rubric_version: str = Field(pattern=r"^\d+\.\d+\.\d+$")

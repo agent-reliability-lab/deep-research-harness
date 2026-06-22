@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.3.0",
+  "schema_version": "0.4.0",
   "task_id": "architecture-01-memory-placement",
   "task_version": "0.1.0",
   "rubric_version": "0.2.0",
@@ -62,9 +62,13 @@
         "stored alongside old ones",
         "Primary fact storage + semantic retrieval"
       ],
-      "answer_patterns": [
-        "ADD-only",
-        "alongside"
+      "answer_pattern_groups": [
+        [
+          "ADD-only"
+        ],
+        [
+          "alongside"
+        ]
       ]
     },
     {
@@ -82,9 +86,13 @@
         "always visible",
         "no retrieval needed"
       ],
-      "answer_patterns": [
-        "memory blocks",
-        "in context"
+      "answer_pattern_groups": [
+        [
+          "memory blocks"
+        ],
+        [
+          "in context"
+        ]
       ]
     },
     {
@@ -100,9 +108,14 @@
         "cannot be pinned to the context window",
         "queried on-demand via tools"
       ],
-      "answer_patterns": [
-        "archival memory",
-        "on demand"
+      "answer_pattern_groups": [
+        [
+          "archival memory"
+        ],
+        [
+          "on demand",
+          "on-demand"
+        ]
       ]
     }
   ],

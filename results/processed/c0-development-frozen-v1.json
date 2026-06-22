@@ -1,0 +1,73 @@
+{
+  "schema_version": "0.1.0",
+  "generated_at": "2026-06-22T05:08:51Z",
+  "run_group_id": "c0-development-frozen-v1",
+  "evaluation_scope": "development",
+  "configuration": "C0",
+  "provider": "deepseek",
+  "model": "deepseek-v4-flash",
+  "pricing_version": "deepseek-official-deepseek-v4-flash-2026-06-22",
+  "source_snapshot_id": "memory-systems-2026-06",
+  "source_hashes": {
+    "mem0-memory-evaluation": "sha256:159686723ec1875171b340f8c6d6ff59227ef30e0ff3f944076ad365d46b8466",
+    "letta-memory-blocks": "sha256:782cb59fd421e11934e8565a4944f218afa72e5b69c6efa1c64222039ad92f8f",
+    "letta-archival-memory": "sha256:d1c83288478527548e5b598ddca4ffb8036ac9c32b1b2f53b7b2c836ff193739"
+  },
+  "runs": [
+    {
+      "run_id": "608e5f0e-0c6e-4213-b65b-86bee9267976",
+      "task_id": "retrieval-ranking-01-letta-context-boundary",
+      "task_version": "0.1.0",
+      "rubric_version": "0.2.0",
+      "status": "eval_valid",
+      "task_success": true,
+      "total_cost_usd": "0.0003166912",
+      "input_tokens": 25124,
+      "output_tokens": 674,
+      "cache_hit_tokens": 24704,
+      "peak_active_context_tokens": 11779,
+      "citation_precision": 1.0,
+      "citation_entailment_rate": 1.0,
+      "required_claim_coverage": 1.0,
+      "tool_call_errors": 0
+    },
+    {
+      "run_id": "4091724c-28c5-4502-b9df-0c3722779e39",
+      "task_id": "memory-lifecycle-01-mem0-add-only",
+      "task_version": "0.1.0",
+      "rubric_version": "0.2.0",
+      "status": "eval_valid",
+      "task_success": true,
+      "total_cost_usd": "0.0014039480",
+      "input_tokens": 20729,
+      "output_tokens": 608,
+      "cache_hit_tokens": 12160,
+      "peak_active_context_tokens": 9561,
+      "citation_precision": 1.0,
+      "citation_entailment_rate": 1.0,
+      "required_claim_coverage": 1.0,
+      "tool_call_errors": 0
+    }
+  ],
+  "aggregate": {
+    "evaluation_scope": "development",
+    "runs": 2,
+    "eval_valid_runs": 2,
+    "successful_runs": 2,
+    "egtsr": 1.0,
+    "total_eval_valid_cost_usd": "0.0017206392",
+    "cost_per_success_usd": "0.0008603196",
+    "peak_active_context_tokens": 11779,
+    "recovery_success_rate": null
+  },
+  "publication": {
+    "eligible_for_primary_egtsr": false,
+    "raw_artifacts_committed": false,
+    "raw_artifacts_policy": "local_only_because_tool_traces_contain_cache_only_source_text"
+  },
+  "limitations": [
+    "This is a two-task development smoke benchmark, not the twenty-task primary matrix.",
+    "Both tasks use deterministic pattern contracts and do not validate the future LLM judge.",
+    "A 1.0 development EGTSR does not establish statistical generality or compare harness configurations."
+  ]
+}

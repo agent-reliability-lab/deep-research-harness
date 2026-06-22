@@ -77,8 +77,9 @@ Infrastructure failures, source failures, expected policy blocks, and agent fail
 - [x] Frozen snapshot and canonical tool interface implemented
 - [x] C0 ReAct loop implemented and validated against a synthetic fixture
 - [x] DeepSeek G4 stability soak completed
-- [x] Benchmark task lifecycle and four seed drafts defined
+- [x] Benchmark lifecycle, two frozen deterministic tasks, and two judge drafts defined
 - [x] Deterministic benchmark scoring path isolated from judge-required tasks
+- [x] First two-task development EGTSR reproduced from frozen official sources
 - [ ] C0 primary-provider run completed after G4
 - [ ] 80-run primary matrix completed
 - [ ] 32-run external-validity subset completed
@@ -99,10 +100,15 @@ The command prints a fixture-only EGTSR and
 `"eligible_for_primary_egtsr": false`. See
 [C0 baseline usage and limits](docs/c0-baseline.md).
 
-Four real task drafts and their shared three-source freeze plan are documented in
+Two frozen deterministic tasks, two judge-required drafts, and their shared
+three-source snapshot are documented in
 [Benchmark task and rubric workflow](docs/task-rubric-design.md). Draft tasks
 are schema-valid for review but the runner refuses to execute them until their
 claims and source snapshot are frozen.
+
+The first two-task C0 development run is published as a copyright-safe
+[processed metrics summary](results/processed/c0-development-frozen-v1.json);
+raw traces remain local because `read_source` events contain cache-only text.
 
 ## Planned repository shape
 

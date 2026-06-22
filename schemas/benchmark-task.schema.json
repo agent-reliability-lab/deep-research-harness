@@ -82,12 +82,15 @@
           "title": "Evidence Patterns",
           "type": "array"
         },
-        "answer_patterns": {
+        "answer_pattern_groups": {
           "items": {
-            "type": "string"
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "minItems": 1,
-          "title": "Answer Patterns",
+          "title": "Answer Pattern Groups",
           "type": "array"
         }
       },
@@ -98,7 +101,7 @@
         "scoring_method",
         "acceptable_source_ids",
         "evidence_patterns",
-        "answer_patterns"
+        "answer_pattern_groups"
       ],
       "title": "RequiredClaim",
       "type": "object"
@@ -221,7 +224,7 @@
   "additionalProperties": false,
   "properties": {
     "schema_version": {
-      "default": "0.3.0",
+      "default": "0.4.0",
       "title": "Schema Version",
       "type": "string"
     },

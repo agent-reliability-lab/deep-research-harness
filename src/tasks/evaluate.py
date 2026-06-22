@@ -22,6 +22,17 @@ def _contains_all(text: str, patterns: list[str]) -> bool:
     return all(pattern.casefold() in normalized for pattern in patterns)
 
 
+def _matches_all_pattern_groups(
+    text: str,
+    groups: list[list[str]],
+) -> bool:
+    normalized = text.casefold()
+    return all(
+        any(pattern.casefold() in normalized for pattern in group)
+        for group in groups
+    )
+
+
 def _record_supports_claim(record: EvidenceRecord, claim: RequiredClaim) -> bool:
     if record.source_id not in claim.acceptable_source_ids:
         return False
@@ -67,13 +78,21 @@ def evaluate_deterministic_run(
             "deterministic evaluation requires a successful final report"
         )
 
-    summary = str(finalize_call.result["summary"])
     cited_records = [
         evidence.get(evidence_id) for evidence_id in final_report.cited_evidence_ids
     ]
+    answer_text = "\n".join(
+        [
+            str(finalize_call.result["summary"]),
+            *(record.claim for record in cited_records),
+        ]
+    )
     supported_claims = 0
     for claim in task.required_claims:
-        answer_present = _contains_all(summary, claim.answer_patterns)
+        answer_present = _matches_all_pattern_groups(
+            answer_text,
+            claim.answer_pattern_groups,
+        )
         evidence_present = any(
             _record_supports_claim(record, claim) for record in cited_records
         )
@@ -90,7 +109,7 @@ def evaluate_deterministic_run(
     citations_total = len(cited_records)
     unique_sources = len({record.source_id for record in cited_records})
     distractor_mentions = sum(
-        distractor.casefold() in summary.casefold()
+        distractor.casefold() in answer_text.casefold()
         for distractor in task.known_distractors
     )
 

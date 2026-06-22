@@ -10,7 +10,7 @@ from types import SimpleNamespace
 from unittest import TestCase
 
 from src.agent.budget import BudgetExceeded, BudgetTracker
-from src.agent.deepseek import DeepSeekProvider, TokenPricing
+from src.agent.deepseek import DeepSeekProvider, TokenPricing, load_pricing
 from src.agent.fixture import FixtureProvider
 from src.agent.provider import ModelCompletion, ModelProtocolError
 from src.agent.runner import C0Runner
@@ -38,6 +38,9 @@ ROOT = Path(__file__).resolve().parents[1]
 TASK_PATH = ROOT / "data" / "fixtures" / "tasks" / "mem0-architecture.json"
 MANIFEST_PATH = (
     ROOT / "data" / "fixtures" / "source_snapshots" / "manifest.json"
+)
+DEEPSEEK_PRICING_PATH = (
+    ROOT / "configs" / "pricing" / "deepseek-v4-flash-2026-06-22.json"
 )
 
 
@@ -192,6 +195,8 @@ class C0RunnerTests(TestCase):
         self.assertEqual(outcome.metrics.required_claim_coverage, 1.0)
         self.assertEqual(outcome.metrics.citation_precision, 1.0)
         self.assertEqual(len(events), 18)
+        self.assertEqual(events[0].task_version, self.task.task_version)
+        self.assertEqual(events[0].rubric_version, self.task.rubric_version)
         self.assertEqual(
             sum(event.event_type == "model_call" for event in events),
             6,
@@ -205,9 +210,9 @@ class C0RunnerTests(TestCase):
     def test_deterministic_answer_contract_requires_every_pattern(self) -> None:
         first_claim = self.task.required_claims[0].model_copy(
             update={
-                "answer_patterns": [
-                    *self.task.required_claims[0].answer_patterns,
-                    "missing answer token",
+                "answer_pattern_groups": [
+                    *self.task.required_claims[0].answer_pattern_groups,
+                    ["missing answer token"],
                 ]
             }
         )
@@ -224,6 +229,28 @@ class C0RunnerTests(TestCase):
         self.assertFalse(outcome.metrics.task_success)
         self.assertEqual(outcome.metrics.required_claim_coverage, 0.5)
         self.assertEqual(outcome.failure_label, "fixture_rubric_failed")
+
+    def test_answer_contract_accepts_one_explicit_variant_per_group(self) -> None:
+        first_claim = self.task.required_claims[0].model_copy(
+            update={
+                "answer_pattern_groups": [
+                    [
+                        "missing variant",
+                        *self.task.required_claims[0].answer_pattern_groups[0],
+                    ]
+                ]
+            }
+        )
+        self.task = self.task.model_copy(
+            update={
+                "required_claims": [
+                    first_claim,
+                    *self.task.required_claims[1:],
+                ]
+            }
+        )
+        outcome, _ = self.run_with(FixtureProvider())
+        self.assertTrue(outcome.metrics.task_success)
 
     def test_citation_precision_and_entailment_are_independent(self) -> None:
         first_claim = self.task.required_claims[0].model_copy(
@@ -416,6 +443,22 @@ class TaskContractTests(TestCase):
 
 
 class DeepSeekAdapterTests(TestCase):
+    def test_committed_deepseek_pricing_is_versioned_and_nonzero(self) -> None:
+        pricing = load_pricing(DEEPSEEK_PRICING_PATH)
+        self.assertEqual(
+            pricing.pricing_version,
+            "deepseek-official-deepseek-v4-flash-2026-06-22",
+        )
+        self.assertEqual(
+            pricing.uncached_input_usd_per_million,
+            Decimal("0.14"),
+        )
+        self.assertEqual(
+            pricing.cache_hit_input_usd_per_million,
+            Decimal("0.0028"),
+        )
+        self.assertEqual(pricing.output_usd_per_million, Decimal("0.28"))
+
     def test_usage_cache_and_versioned_pricing_are_normalized(self) -> None:
         response = SimpleNamespace(
             model="deepseek-v4-flash",

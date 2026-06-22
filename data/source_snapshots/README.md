@@ -23,6 +23,7 @@ python -m src.snapshots.cli add \
   --retrieved-at "2026-06-21T12:00:00Z" \
   --source-type official_docs \
   --version-or-pub-date "2026-06-21" \
+  --excerpt "A short, source-faithful excerpt suitable for public metadata." \
   --redistribution-policy cache_only
 ```
 

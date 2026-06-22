@@ -61,16 +61,23 @@ record the retrieval date:
 }
 ```
 
-After replacing the placeholders with numeric JSON values:
+The committed `deepseek-v4-flash` pricing snapshot was retrieved from the
+[official DeepSeek pricing page](https://api-docs.deepseek.com/quick_start/pricing)
+on June 22, 2026. Re-check the provider page before a later scored run because
+DeepSeek explicitly reserves the right to change prices.
+
+Run a frozen deterministic development task:
 
 ```bash
 python -m src.agent.cli deepseek \
-  --task data/fixtures/tasks/mem0-architecture.json \
-  --manifest data/fixtures/source_snapshots/manifest.json \
-  --pricing-file /path/to/deepseek-pricing.json \
-  --output "$(mktemp -d)/c0-deepseek"
+  --task data/tasks/frozen/retrieval-ranking-01-letta-context-boundary.json \
+  --manifest data/source_snapshots/manifest.json \
+  --pricing-file configs/pricing/deepseek-v4-flash-2026-06-22.json \
+  --output "results/local/c0-deepseek-$(date -u +%Y%m%dT%H%M%SZ)"
 ```
 
-This is still a fixture run. It is useful for integration testing with the real
-endpoint, but it is not a primary scored run. G4 and the real frozen corpus must
-be complete before primary results enter the denominator.
+This run uses `evaluation_scope: development`. It is a real scored task but is
+not eligible for the primary headline metric. Only a separately designated
+primary run group may enter the primary denominator. `results/local/` is
+gitignored because tool traces contain the full cache-only source text; publish
+only derived metrics and appropriately short evidence excerpts.

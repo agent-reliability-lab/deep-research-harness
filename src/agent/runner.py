@@ -108,6 +108,8 @@ class C0Runner:
             timestamp=self._now(),
             run_group_id=self.run_group_id,
             task_id=self.task.task_id,
+            task_version=self.task.task_version,
+            rubric_version=self.task.rubric_version,
             configuration=Configuration.C0,
             evaluation_scope=(
                 EvaluationScope.FIXTURE

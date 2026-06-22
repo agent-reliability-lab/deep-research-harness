@@ -25,6 +25,40 @@ from src.trace.store import TraceWriter
 from .bm25 import BM25Index
 from .schemas import TOOL_SCHEMAS
 
+_TYPOGRAPHY_TRANSLATION = str.maketrans(
+    {
+        "‘": "'",
+        "’": "'",
+        "“": '"',
+        "”": '"',
+        "–": "-",
+        "—": "-",
+    }
+)
+
+
+def locate_grounded_excerpt(source_text: str, proposed_excerpt: str) -> str:
+    """Resolve exact source text, allowing only unique typography variants."""
+
+    proposed = proposed_excerpt.strip()
+    if proposed in source_text:
+        return proposed
+    normalized_source = source_text.translate(_TYPOGRAPHY_TRANSLATION)
+    normalized_proposed = proposed.translate(_TYPOGRAPHY_TRANSLATION)
+    first = normalized_source.find(normalized_proposed)
+    if first < 0:
+        raise ValueError(
+            "evidence excerpt must appear verbatim or as a unique typography "
+            "variant in the frozen source text"
+        )
+    second = normalized_source.find(normalized_proposed, first + 1)
+    if second >= 0:
+        raise ValueError(
+            "typography-normalized evidence excerpt is ambiguous in the "
+            "frozen source text"
+        )
+    return source_text[first : first + len(proposed)]
+
 
 class ToolExecutionError(RuntimeError):
     """A tool failed after its failure event was written."""
@@ -191,11 +225,7 @@ class ToolRuntime:
     ) -> tuple[dict[str, Any], list[str]]:
         entry = self.corpus.entry(source_id)
         text = self.corpus.document(source_id).cleaned_text
-        grounded_excerpt = (excerpt or claim).strip()
-        if grounded_excerpt not in text:
-            raise ValueError(
-                "evidence excerpt must appear verbatim in the frozen source text"
-            )
+        grounded_excerpt = locate_grounded_excerpt(text, excerpt or claim)
         evidence_id = uuid4()
         evidence_event_id = uuid4()
         source_date = self._parse_source_date(entry.version_or_pub_date)

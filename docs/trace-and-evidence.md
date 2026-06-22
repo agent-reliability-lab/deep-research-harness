@@ -24,6 +24,7 @@ evidence record into the run history.
 
 - Event sequence starts at zero and is contiguous.
 - Exactly one `run_started` event appears first.
+- `run_started` pins task, rubric, source-snapshot, pricing, and model versions.
 - All events have one `run_id`.
 - Event IDs are unique; parent IDs must refer to earlier events.
 - `run_ended`, when present, appears once and last.

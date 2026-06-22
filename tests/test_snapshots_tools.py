@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from contextlib import redirect_stdout
 from datetime import UTC, datetime
 from decimal import Decimal
+from io import StringIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from types import SimpleNamespace
 from unittest import TestCase
 from uuid import UUID, uuid4
 
@@ -21,10 +24,13 @@ from src.snapshots import (
     SourceManifestEntry,
     SourceType,
 )
+from src.snapshots.cli import add_source
 from src.snapshots.corpus import content_hash
+from src.snapshots.markdown import clean_markdown
 from src.snapshots.models import CachedSource
 from src.tools import TOOL_SCHEMAS, ToolExecutionError, ToolRuntime
 from src.tools.bm25 import BM25Index, tokenize
+from src.tools.runtime import locate_grounded_excerpt
 from src.trace.models import (
     CallStatus,
     ChatMessage,
@@ -95,6 +101,8 @@ def append_run_start(writer: TraceWriter, run_id: UUID) -> RunStartedEvent:
         timestamp=NOW,
         run_group_id="test-run-group",
         task_id="test-task",
+        task_version="1.0.0",
+        rubric_version="1.0.0",
         configuration=Configuration.C0,
         provider="deepseek",
         endpoint_class="openai-compatible",
@@ -151,6 +159,65 @@ def append_model_call(
 
 
 class SnapshotCorpusTests(TestCase):
+    def test_markdown_cleaner_preserves_visible_text_and_is_idempotent(
+        self,
+    ) -> None:
+        raw = """---
+title: Example
+---
+> ## Documentation Index
+> Fetch the index.
+
+# Memory
+
+<Info>
+The key is **ADD-only extraction** with [semantic search](https://example.com).
+</Info>
+
+Use `record_evidence` with in-context facts.
+"""
+        cleaned = clean_markdown(raw)
+        self.assertEqual(
+            cleaned,
+            "Memory\n\n"
+            "The key is ADD-only extraction with semantic search.\n\n"
+            "Use record_evidence with in-context facts.\n",
+        )
+        self.assertEqual(clean_markdown(cleaned), cleaned)
+
+    def test_add_source_accepts_explicit_public_excerpt(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            cleaned_text = root / "source.md"
+            cleaned_text.write_text(
+                "---\ntitle: metadata\n---\nUseful source body.",
+                encoding="utf-8",
+            )
+            manifest_path = root / "manifest.json"
+            with redirect_stdout(StringIO()):
+                add_source(
+                    SimpleNamespace(
+                        manifest=manifest_path,
+                        cleaned_text=cleaned_text,
+                        source_id="official-source",
+                        title="Official source",
+                        url="https://example.com/official",
+                        retrieved_at="2026-06-22T00:00:00Z",
+                        source_type=SourceType.OFFICIAL_DOCS,
+                        version_or_pub_date=None,
+                        redistribution_policy=RedistributionPolicy.CACHE_ONLY,
+                        language="en",
+                        license=None,
+                        excerpt="Useful source body.",
+                        excerpt_chars=500,
+                    )
+                )
+            manifest = SnapshotManifest.model_validate_json(
+                manifest_path.read_text(encoding="utf-8")
+            )
+            self.assertEqual(manifest.sources[0].excerpt, "Useful source body.")
+            SnapshotCorpus(manifest_path).verify_all()
+
     def test_cache_hash_is_verified_and_tampering_fails_closed(self) -> None:
         with TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
@@ -213,6 +280,20 @@ class SearchAndSchemaTests(TestCase):
 
 
 class ToolRuntimeTests(TestCase):
+    def test_evidence_locator_accepts_only_unique_typography_variants(
+        self,
+    ) -> None:
+        source = "The agent’s state is always visible - no retrieval needed."
+        proposed = "The agent's state is always visible — no retrieval needed."
+        self.assertEqual(locate_grounded_excerpt(source, proposed), source)
+        with self.assertRaisesRegex(ValueError, "ambiguous"):
+            locate_grounded_excerpt(
+                "The agent’s state. The agent‘s state.",
+                "The agent's state.",
+            )
+        with self.assertRaisesRegex(ValueError, "must appear"):
+            locate_grounded_excerpt(source, "The agent state is sometimes visible.")
+
     def test_five_tools_emit_a_valid_trace_and_grounded_evidence(self) -> None:
         with TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)

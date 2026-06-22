@@ -2,5 +2,48 @@
   "schema_version": "0.1.0",
   "snapshot_id": "memory-systems-2026-06",
   "created_at": "2026-06-21T00:00:00Z",
-  "sources": []
+  "sources": [
+    {
+      "source_id": "mem0-memory-evaluation",
+      "title": "Mem0 Memory Evaluation",
+      "canonical_url": "https://docs.mem0.ai/core-concepts/memory-evaluation",
+      "retrieved_at": "2026-06-22T04:49:33Z",
+      "content_hash": "sha256:159686723ec1875171b340f8c6d6ff59227ef30e0ff3f944076ad365d46b8466",
+      "excerpt": "The key architectural decision is ADD-only extraction. New facts are stored alongside old ones — nothing is overwritten or deleted. This preserves temporal context and eliminates information loss from premature consolidation.",
+      "source_type": "official_docs",
+      "version_or_pub_date": null,
+      "redistribution_policy": "cache_only",
+      "cache_relpath": "cache/mem0-memory-evaluation.json",
+      "language": "en",
+      "license": null
+    },
+    {
+      "source_id": "letta-memory-blocks",
+      "title": "Letta Memory Blocks",
+      "canonical_url": "https://docs.letta.com/guides/core-concepts/memory/memory-blocks",
+      "retrieved_at": "2026-06-22T04:49:33Z",
+      "content_hash": "sha256:782cb59fd421e11934e8565a4944f218afa72e5b69c6efa1c64222039ad92f8f",
+      "excerpt": "Memory blocks are structured sections of the agent’s context window that persist across all interactions. They are always visible - no retrieval needed.",
+      "source_type": "official_docs",
+      "version_or_pub_date": null,
+      "redistribution_policy": "cache_only",
+      "cache_relpath": "cache/letta-memory-blocks.json",
+      "language": "en",
+      "license": null
+    },
+    {
+      "source_id": "letta-archival-memory",
+      "title": "Letta Archival Memory",
+      "canonical_url": "https://docs.letta.com/guides/core-concepts/memory/archival-memory",
+      "retrieved_at": "2026-06-22T04:49:33Z",
+      "content_hash": "sha256:d1c83288478527548e5b598ddca4ffb8036ac9c32b1b2f53b7b2c836ff193739",
+      "excerpt": "Archival memory is a semantically searchable database where agents can store facts, knowledge, and information for long-term retrieval. Unlike memory blocks, archival memory fragments cannot be pinned to the context window, and must be queried on-demand via tools.",
+      "source_type": "official_docs",
+      "version_or_pub_date": null,
+      "redistribution_policy": "cache_only",
+      "cache_relpath": "cache/letta-archival-memory.json",
+      "language": "en",
+      "license": null
+    }
+  ]
 }

@@ -1,0 +1,6 @@
+{
+  "pricing_version": "deepseek-official-deepseek-v4-flash-2026-06-22",
+  "uncached_input_usd_per_million": "0.14",
+  "cache_hit_input_usd_per_million": "0.0028",
+  "output_usd_per_million": "0.28"
+}

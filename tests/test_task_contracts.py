@@ -12,7 +12,7 @@ from uuid import uuid4
 from src.agent.fixture import FixtureProvider
 from src.agent.runner import C0Runner
 from src.evidence import EvidenceStore
-from src.snapshots import SnapshotCorpus
+from src.snapshots import SnapshotCorpus, SnapshotManifest
 from src.tasks.cli import build_freeze_plan, load_source_texts
 from src.tasks.evaluate import evaluate_deterministic_run
 from src.tasks.load import load_task
@@ -28,6 +28,11 @@ from src.trace.models import RunBudget
 
 ROOT = Path(__file__).resolve().parents[1]
 DRAFT_DIR = ROOT / "data" / "tasks" / "drafts"
+FROZEN_DIR = ROOT / "data" / "tasks" / "frozen"
+SOURCE_MANIFEST = ROOT / "data" / "source_snapshots" / "manifest.json"
+DEVELOPMENT_SUMMARY = (
+    ROOT / "results" / "processed" / "c0-development-frozen-v1.json"
+)
 FIXTURE_TASK = ROOT / "data" / "fixtures" / "tasks" / "mem0-architecture.json"
 FIXTURE_MANIFEST = (
     ROOT / "data" / "fixtures" / "source_snapshots" / "manifest.json"
@@ -35,9 +40,9 @@ FIXTURE_MANIFEST = (
 
 
 class TaskLifecycleTests(TestCase):
-    def test_four_real_drafts_load_but_are_not_freeze_ready(self) -> None:
+    def test_two_judge_drafts_load_but_are_not_freeze_ready(self) -> None:
         tasks = [load_task(path) for path in sorted(DRAFT_DIR.glob("*.json"))]
-        self.assertEqual(len(tasks), 4)
+        self.assertEqual(len(tasks), 2)
         self.assertTrue(
             all(task.lifecycle is TaskLifecycle.DRAFT for task in tasks)
         )
@@ -51,18 +56,52 @@ class TaskLifecycleTests(TestCase):
                 for claim in task.required_claims
             )
         )
-        deterministic = [
-            task
-            for task in tasks
-            if task.evaluation_mode is EvaluationMode.DETERMINISTIC_BENCHMARK
-        ]
-        self.assertEqual(len(deterministic), 2)
+        self.assertTrue(
+            all(
+                task.evaluation_mode is EvaluationMode.JUDGE_REQUIRED
+                for task in tasks
+            )
+        )
+
+    def test_two_deterministic_tasks_are_frozen_against_public_manifest(
+        self,
+    ) -> None:
+        tasks = [load_task(path) for path in sorted(FROZEN_DIR.glob("*.json"))]
+        manifest = SnapshotManifest.model_validate_json(
+            SOURCE_MANIFEST.read_text(encoding="utf-8")
+        )
+        self.assertEqual(len(tasks), 2)
+        self.assertTrue(
+            all(task.lifecycle is TaskLifecycle.FROZEN for task in tasks)
+        )
+        self.assertTrue(
+            all(
+                task.source_snapshot_id == manifest.snapshot_id
+                for task in tasks
+            )
+        )
+        self.assertTrue(
+            all(
+                claim.verification_status
+                is ClaimVerificationStatus.VERIFIED
+                for task in tasks
+                for claim in task.required_claims
+            )
+        )
         self.assertTrue(
             all(
                 claim.scoring_method is ClaimScoringMethod.PATTERN_CONTRACT
-                for task in deterministic
+                for task in tasks
                 for claim in task.required_claims
             )
+        )
+        self.assertEqual(
+            {source.source_id for source in manifest.sources},
+            {
+                "mem0-memory-evaluation",
+                "letta-memory-blocks",
+                "letta-archival-memory",
+            },
         )
 
     def test_draft_task_cannot_run_even_with_a_valid_corpus(self) -> None:
@@ -176,7 +215,9 @@ class TaskLifecycleTests(TestCase):
 class FreezePlanTests(TestCase):
     def setUp(self) -> None:
         self.tasks = [
-            load_task(path) for path in sorted(DRAFT_DIR.glob("*.json"))
+            load_task(path)
+            for directory in (DRAFT_DIR, FROZEN_DIR)
+            for path in sorted(directory.glob("*.json"))
         ]
 
     def test_plan_deduplicates_three_sources_across_four_tasks(self) -> None:
@@ -268,3 +309,36 @@ class EvidencePatternPreflightTests(TestCase):
                 load_source_texts([spec, spec])
             with self.assertRaisesRegex(ValueError, "expected SOURCE_ID=PATH"):
                 load_source_texts(["not-a-mapping"])
+
+
+class DevelopmentSummaryTests(TestCase):
+    def test_summary_pins_public_tasks_snapshot_and_nonprimary_scope(
+        self,
+    ) -> None:
+        summary = json.loads(DEVELOPMENT_SUMMARY.read_text(encoding="utf-8"))
+        manifest = SnapshotManifest.model_validate_json(
+            SOURCE_MANIFEST.read_text(encoding="utf-8")
+        )
+        tasks = {
+            task.task_id: task
+            for task in (
+                load_task(path)
+                for path in sorted(FROZEN_DIR.glob("*.json"))
+            )
+        }
+        self.assertEqual(summary["evaluation_scope"], "development")
+        self.assertFalse(
+            summary["publication"]["eligible_for_primary_egtsr"]
+        )
+        self.assertFalse(summary["publication"]["raw_artifacts_committed"])
+        self.assertEqual(
+            summary["source_hashes"],
+            {
+                entry.source_id: entry.content_hash
+                for entry in manifest.sources
+            },
+        )
+        for run in summary["runs"]:
+            task = tasks[run["task_id"]]
+            self.assertEqual(run["task_version"], task.task_version)
+            self.assertEqual(run["rubric_version"], task.rubric_version)

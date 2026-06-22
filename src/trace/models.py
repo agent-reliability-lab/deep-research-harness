@@ -98,7 +98,7 @@ class CallCost(StrictModel):
 
 
 class EventBase(StrictModel):
-    schema_version: str = "0.1.0"
+    schema_version: str = "0.2.0"
     event_id: UUID = Field(default_factory=uuid4)
     run_id: UUID
     sequence: int = Field(ge=0)
@@ -118,6 +118,8 @@ class RunStartedEvent(EventBase):
     event_type: Literal["run_started"] = "run_started"
     run_group_id: str = Field(min_length=1)
     task_id: str = Field(min_length=1)
+    task_version: str = Field(pattern=r"^\d+\.\d+\.\d+$")
+    rubric_version: str = Field(pattern=r"^\d+\.\d+\.\d+$")
     configuration: Configuration
     evaluation_scope: EvaluationScope = EvaluationScope.PRIMARY
     provider: str = Field(min_length=1)

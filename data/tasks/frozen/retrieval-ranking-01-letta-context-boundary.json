@@ -1,14 +1,14 @@
 {
-  "schema_version": "0.3.0",
+  "schema_version": "0.4.0",
   "task_id": "retrieval-ranking-01-letta-context-boundary",
   "task_version": "0.1.0",
-  "rubric_version": "0.1.0",
-  "lifecycle": "draft",
+  "rubric_version": "0.2.0",
+  "lifecycle": "frozen",
   "family": "retrieval_ranking",
   "prompt": "Using only the two frozen Letta sources, classify memory blocks and archival memory by active-context visibility and retrieval requirement. State the exact documented behavior of each layer, with one citation per layer. Do not infer latency, quality, or token savings beyond what the sources explicitly state.",
   "fixture_only": false,
   "evaluation_mode": "deterministic_benchmark",
-  "source_snapshot_id": null,
+  "source_snapshot_id": "memory-systems-2026-06",
   "source_requirements": [
     {
       "source_id": "letta-memory-blocks",
@@ -39,7 +39,7 @@
     {
       "claim_id": "blocks-always-visible",
       "description": "Letta memory blocks are structured sections of the context window that persist across interactions and remain visible without retrieval.",
-      "verification_status": "draft",
+      "verification_status": "verified",
       "scoring_method": "pattern_contract",
       "acceptable_source_ids": [
         "letta-memory-blocks"
@@ -51,18 +51,28 @@
         "always visible",
         "no retrieval needed"
       ],
-      "answer_patterns": [
-        "memory blocks",
-        "context window",
-        "persist",
-        "always visible",
-        "no retrieval"
+      "answer_pattern_groups": [
+        [
+          "memory blocks"
+        ],
+        [
+          "context window"
+        ],
+        [
+          "persist"
+        ],
+        [
+          "always visible"
+        ],
+        [
+          "no retrieval"
+        ]
       ]
     },
     {
       "claim_id": "archival-on-demand-tools",
       "description": "Letta archival memory is a semantically searchable database that cannot be pinned to the context window and must be queried on demand through tools.",
-      "verification_status": "draft",
+      "verification_status": "verified",
       "scoring_method": "pattern_contract",
       "acceptable_source_ids": [
         "letta-archival-memory"
@@ -72,12 +82,22 @@
         "cannot be pinned to the context window",
         "queried on-demand via tools"
       ],
-      "answer_patterns": [
-        "archival memory",
-        "semantically searchable",
-        "cannot be pinned",
-        "on-demand",
-        "tools"
+      "answer_pattern_groups": [
+        [
+          "archival memory"
+        ],
+        [
+          "semantically searchable"
+        ],
+        [
+          "cannot be pinned"
+        ],
+        [
+          "on-demand"
+        ],
+        [
+          "tools"
+        ]
       ]
     }
   ],

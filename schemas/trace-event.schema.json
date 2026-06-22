@@ -127,7 +127,7 @@
       "additionalProperties": false,
       "properties": {
         "schema_version": {
-          "default": "0.1.0",
+          "default": "0.2.0",
           "title": "Schema Version",
           "type": "string"
         },
@@ -288,7 +288,7 @@
       "additionalProperties": false,
       "properties": {
         "schema_version": {
-          "default": "0.1.0",
+          "default": "0.2.0",
           "title": "Schema Version",
           "type": "string"
         },
@@ -386,7 +386,7 @@
       "additionalProperties": false,
       "properties": {
         "schema_version": {
-          "default": "0.1.0",
+          "default": "0.2.0",
           "title": "Schema Version",
           "type": "string"
         },
@@ -550,7 +550,7 @@
       "additionalProperties": false,
       "properties": {
         "schema_version": {
-          "default": "0.1.0",
+          "default": "0.2.0",
           "title": "Schema Version",
           "type": "string"
         },
@@ -624,7 +624,7 @@
       "additionalProperties": false,
       "properties": {
         "schema_version": {
-          "default": "0.1.0",
+          "default": "0.2.0",
           "title": "Schema Version",
           "type": "string"
         },
@@ -712,7 +712,7 @@
       "additionalProperties": false,
       "properties": {
         "schema_version": {
-          "default": "0.1.0",
+          "default": "0.2.0",
           "title": "Schema Version",
           "type": "string"
         },
@@ -954,7 +954,7 @@
       "additionalProperties": false,
       "properties": {
         "schema_version": {
-          "default": "0.1.0",
+          "default": "0.2.0",
           "title": "Schema Version",
           "type": "string"
         },
@@ -1057,7 +1057,7 @@
       "additionalProperties": false,
       "properties": {
         "schema_version": {
-          "default": "0.1.0",
+          "default": "0.2.0",
           "title": "Schema Version",
           "type": "string"
         },
@@ -1194,7 +1194,7 @@
       "additionalProperties": false,
       "properties": {
         "schema_version": {
-          "default": "0.1.0",
+          "default": "0.2.0",
           "title": "Schema Version",
           "type": "string"
         },
@@ -1278,7 +1278,7 @@
       "additionalProperties": false,
       "properties": {
         "schema_version": {
-          "default": "0.1.0",
+          "default": "0.2.0",
           "title": "Schema Version",
           "type": "string"
         },
@@ -1335,6 +1335,16 @@
         "task_id": {
           "minLength": 1,
           "title": "Task Id",
+          "type": "string"
+        },
+        "task_version": {
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "title": "Task Version",
+          "type": "string"
+        },
+        "rubric_version": {
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "title": "Rubric Version",
           "type": "string"
         },
         "configuration": {
@@ -1397,6 +1407,8 @@
         "timestamp",
         "run_group_id",
         "task_id",
+        "task_version",
+        "rubric_version",
         "configuration",
         "provider",
         "endpoint_class",
@@ -1413,7 +1425,7 @@
       "additionalProperties": false,
       "properties": {
         "schema_version": {
-          "default": "0.1.0",
+          "default": "0.2.0",
           "title": "Schema Version",
           "type": "string"
         },
@@ -1562,7 +1574,7 @@
       "additionalProperties": false,
       "properties": {
         "schema_version": {
-          "default": "0.1.0",
+          "default": "0.2.0",
           "title": "Schema Version",
           "type": "string"
         },
