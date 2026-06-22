@@ -141,7 +141,20 @@ class ToolRuntime:
             result=result,
             tool_event=tool_event,
         )
-        return result
+        return self._agent_facing_result(tool_name, result)
+
+    @staticmethod
+    def _agent_facing_result(
+        tool_name: str,
+        result: dict[str, Any],
+    ) -> dict[str, Any]:
+        if tool_name != "read_source":
+            return result
+        return {
+            key: value
+            for key, value in result.items()
+            if key not in {"content_hash", "retrieved_at"}
+        }
 
     def _validate_arguments(self, tool_name: str, arguments: dict[str, Any]) -> None:
         try:
@@ -210,7 +223,6 @@ class ToolRuntime:
                 "canonical_url": str(entry.canonical_url),
                 "retrieved_at": entry.retrieved_at.isoformat(),
                 "content_hash": entry.content_hash,
-                "text": document.cleaned_text,
                 "cleaned_text": document.cleaned_text,
             },
             [source_id],

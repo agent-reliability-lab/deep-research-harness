@@ -40,6 +40,7 @@ from src.trace.models import (
     RunBudget,
     RunStartedEvent,
     ToolCallRequest,
+    ToolExecutionEvent,
 )
 from src.trace.store import TraceReader, TraceWriter
 from src.trace.validate import validate_trace
@@ -376,7 +377,26 @@ class ToolRuntimeTests(TestCase):
             events = validate_trace(trace_path, evidence_path)
             self.assertEqual(results[0]["results"][0]["source_id"], "mem0-docs")
             self.assertEqual(results[0]["source_ids"][0], "mem0-docs")
-            self.assertEqual(results[1]["text"], results[1]["cleaned_text"])
+            # Agent-facing read results exclude duplicate text and low-signal
+            # provenance fields, while the trace retains audit metadata.
+            self.assertNotIn("text", results[1])
+            self.assertNotIn("content_hash", results[1])
+            self.assertNotIn("retrieved_at", results[1])
+            self.assertTrue(results[1]["cleaned_text"])
+            read_event = next(
+                event
+                for event in events
+                if isinstance(event, ToolExecutionEvent)
+                and event.tool_name == "read_source"
+            )
+            self.assertEqual(
+                read_event.result["content_hash"],
+                corpus.entry("mem0-docs").content_hash,
+            )
+            self.assertEqual(
+                read_event.result["retrieved_at"],
+                corpus.entry("mem0-docs").retrieved_at.isoformat(),
+            )
             self.assertTrue(results[3]["contradiction"])
             self.assertEqual(len(evidence.all()), 1)
             self.assertEqual(len(events), 13)
