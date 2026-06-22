@@ -1,0 +1,130 @@
+{
+  "schema_version": "0.2.0",
+  "task_id": "architecture-01-memory-placement",
+  "task_version": "0.1.0",
+  "rubric_version": "0.1.0",
+  "lifecycle": "draft",
+  "family": "architecture_comparison",
+  "prompt": "Compare how Mem0 and Letta place persistent memory relative to the active model context. Explain Mem0's extraction and external-memory path, Letta's always-visible memory blocks, and Letta's on-demand archival memory. Do not recommend a winner; identify the architectural trade-off and cite every required claim.",
+  "fixture_only": false,
+  "evaluation_mode": "judge_required",
+  "source_snapshot_id": null,
+  "source_requirements": [
+    {
+      "source_id": "mem0-memory-evaluation",
+      "source_type": "official_docs",
+      "canonical_url": "https://docs.mem0.ai/core-concepts/memory-evaluation",
+      "url_checked_at": "2026-06-22",
+      "required_topics": [
+        "candidate fact extraction",
+        "memory update actions",
+        "vector graph and history stores"
+      ],
+      "selection_rationale": "Official Mem0 architecture walkthrough covering extraction, update decisions, storage, and retrieval."
+    },
+    {
+      "source_id": "letta-memory-blocks",
+      "source_type": "official_docs",
+      "canonical_url": "https://docs.letta.com/guides/core-concepts/memory/memory-blocks",
+      "url_checked_at": "2026-06-22",
+      "required_topics": [
+        "in-context memory blocks",
+        "block labels and values",
+        "agent-editable persistent state"
+      ],
+      "selection_rationale": "Official Letta documentation for the persistent state that remains visible in the active context."
+    },
+    {
+      "source_id": "letta-archival-memory",
+      "source_type": "official_docs",
+      "canonical_url": "https://docs.letta.com/guides/core-concepts/memory/archival-memory",
+      "url_checked_at": "2026-06-22",
+      "required_topics": [
+        "out-of-context storage",
+        "semantic search",
+        "on-demand retrieval"
+      ],
+      "selection_rationale": "Official Letta documentation for external memory retrieved through tools rather than kept continuously in context."
+    }
+  ],
+  "required_claims": [
+    {
+      "claim_id": "mem0-external-memory-path",
+      "description": "Mem0 extracts candidate facts, applies memory update decisions, and stores persistent memory outside the active prompt for later retrieval.",
+      "verification_status": "draft",
+      "acceptable_source_ids": [
+        "mem0-memory-evaluation"
+      ],
+      "evidence_patterns": [
+        "extract",
+        "ADD",
+        "UPDATE",
+        "vector"
+      ],
+      "answer_patterns": [
+        "extract",
+        "external"
+      ]
+    },
+    {
+      "claim_id": "letta-blocks-in-context",
+      "description": "Letta memory blocks are structured persistent state that remains visible in the active model context.",
+      "verification_status": "draft",
+      "acceptable_source_ids": [
+        "letta-memory-blocks"
+      ],
+      "evidence_patterns": [
+        "in-context",
+        "always visible",
+        "memory blocks"
+      ],
+      "answer_patterns": [
+        "memory blocks",
+        "in context"
+      ]
+    },
+    {
+      "claim_id": "letta-archival-on-demand",
+      "description": "Letta archival memory is kept outside the active context and searched on demand.",
+      "verification_status": "draft",
+      "acceptable_source_ids": [
+        "letta-archival-memory"
+      ],
+      "evidence_patterns": [
+        "outside",
+        "semantic search",
+        "on demand"
+      ],
+      "answer_patterns": [
+        "archival memory",
+        "on demand"
+      ]
+    }
+  ],
+  "acceptable_source_ids": [
+    "mem0-memory-evaluation",
+    "letta-memory-blocks",
+    "letta-archival-memory"
+  ],
+  "known_distractors": [
+    "Letta archival memory is always loaded into the prompt",
+    "Mem0 stores every conversation turn verbatim as a final memory",
+    "all persistent memory is always in context"
+  ],
+  "required_comparison_dimensions": [
+    "active-context residency",
+    "external storage role",
+    "retrieval trigger",
+    "state update path"
+  ],
+  "citation_expectations": {
+    "minimum_citations": 3,
+    "minimum_unique_sources": 3
+  },
+  "rubric": {
+    "minimum_required_claim_coverage": 1.0,
+    "minimum_citation_precision": 1.0,
+    "minimum_citation_entailment": 1.0,
+    "maximum_distractor_mentions": 0
+  }
+}

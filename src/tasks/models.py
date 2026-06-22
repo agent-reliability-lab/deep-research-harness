@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from datetime import date
 from enum import StrEnum
 
-from pydantic import ConfigDict, Field, field_validator, model_validator
+from pydantic import AnyUrl, ConfigDict, Field, field_validator, model_validator
 from pydantic.main import BaseModel
+
+from src.snapshots.models import SourceType
 
 
 class StrictModel(BaseModel):
@@ -25,9 +28,34 @@ class EvaluationMode(StrEnum):
     JUDGE_REQUIRED = "judge_required"
 
 
+class TaskLifecycle(StrEnum):
+    DRAFT = "draft"
+    FROZEN = "frozen"
+
+
+class ClaimVerificationStatus(StrEnum):
+    DRAFT = "draft"
+    VERIFIED = "verified"
+
+
+class SourceRequirement(StrictModel):
+    source_id: str = Field(min_length=1, pattern=r"^[a-z0-9][a-z0-9._-]*$")
+    source_type: SourceType
+    canonical_url: AnyUrl
+    url_checked_at: date
+    required_topics: list[str] = Field(min_length=1)
+    selection_rationale: str = Field(min_length=1)
+
+    @field_validator("required_topics")
+    @classmethod
+    def require_unique_topics(cls, values: list[str]) -> list[str]:
+        return _unique_nonempty(values)
+
+
 class RequiredClaim(StrictModel):
     claim_id: str = Field(min_length=1, pattern=r"^[a-z0-9][a-z0-9._-]*$")
     description: str = Field(min_length=1)
+    verification_status: ClaimVerificationStatus
     acceptable_source_ids: list[str] = Field(min_length=1)
     evidence_patterns: list[str] = Field(min_length=1)
     answer_patterns: list[str] = Field(min_length=1)
@@ -39,12 +67,7 @@ class RequiredClaim(StrictModel):
     )
     @classmethod
     def require_unique_nonempty_values(cls, values: list[str]) -> list[str]:
-        cleaned = [value.strip() for value in values]
-        if any(not value for value in cleaned):
-            raise ValueError("list values must not be blank")
-        if len(cleaned) != len(set(cleaned)):
-            raise ValueError("list values must be unique")
-        return cleaned
+        return _unique_nonempty(values)
 
 
 class CitationExpectations(StrictModel):
@@ -60,12 +83,17 @@ class TaskRubric(StrictModel):
 
 
 class BenchmarkTask(StrictModel):
-    schema_version: str = "0.1.0"
+    schema_version: str = "0.2.0"
     task_id: str = Field(min_length=1, pattern=r"^[a-z0-9][a-z0-9._-]*$")
+    task_version: str = Field(pattern=r"^\d+\.\d+\.\d+$")
+    rubric_version: str = Field(pattern=r"^\d+\.\d+\.\d+$")
+    lifecycle: TaskLifecycle
     family: TaskFamily
     prompt: str = Field(min_length=1)
     fixture_only: bool
     evaluation_mode: EvaluationMode
+    source_snapshot_id: str | None
+    source_requirements: list[SourceRequirement] = Field(min_length=1)
     required_claims: list[RequiredClaim] = Field(min_length=1)
     acceptable_source_ids: list[str] = Field(min_length=1)
     known_distractors: list[str] = Field(default_factory=list)
@@ -80,19 +108,23 @@ class BenchmarkTask(StrictModel):
     )
     @classmethod
     def require_unique_values(cls, values: list[str]) -> list[str]:
-        cleaned = [value.strip() for value in values]
-        if any(not value for value in cleaned):
-            raise ValueError("list values must not be blank")
-        if len(cleaned) != len(set(cleaned)):
-            raise ValueError("list values must be unique")
-        return cleaned
+        return _unique_nonempty(values)
 
     @model_validator(mode="after")
     def validate_task_contract(self) -> BenchmarkTask:
         claim_ids = [claim.claim_id for claim in self.required_claims]
         if len(claim_ids) != len(set(claim_ids)):
             raise ValueError("required claim IDs must be unique")
+        requirement_ids = [
+            requirement.source_id for requirement in self.source_requirements
+        ]
+        if len(requirement_ids) != len(set(requirement_ids)):
+            raise ValueError("source requirement IDs must be unique")
         allowed = set(self.acceptable_source_ids)
+        if set(requirement_ids) != allowed:
+            raise ValueError(
+                "source_requirements must exactly match acceptable_source_ids"
+            )
         for claim in self.required_claims:
             unknown = set(claim.acceptable_source_ids) - allowed
             if unknown:
@@ -107,4 +139,37 @@ class BenchmarkTask(StrictModel):
             and self.evaluation_mode is EvaluationMode.DETERMINISTIC_FIXTURE
         ):
             raise ValueError("deterministic_fixture evaluation is only valid for fixtures")
+        if self.lifecycle is TaskLifecycle.DRAFT:
+            if self.source_snapshot_id is not None:
+                raise ValueError("draft tasks cannot pin a source_snapshot_id")
+            if self.fixture_only:
+                raise ValueError("fixtures must be frozen, not draft")
+        else:
+            if not self.source_snapshot_id:
+                raise ValueError("frozen tasks require source_snapshot_id")
+            unverified = [
+                claim.claim_id
+                for claim in self.required_claims
+                if claim.verification_status is not ClaimVerificationStatus.VERIFIED
+            ]
+            if unverified:
+                raise ValueError(
+                    f"frozen tasks contain unverified claims: {unverified}"
+                )
+        if (
+            self.citation_expectations.minimum_unique_sources
+            > len(self.acceptable_source_ids)
+        ):
+            raise ValueError(
+                "minimum_unique_sources exceeds acceptable source count"
+            )
         return self
+
+
+def _unique_nonempty(values: list[str]) -> list[str]:
+    cleaned = [value.strip() for value in values]
+    if any(not value for value in cleaned):
+        raise ValueError("list values must not be blank")
+    if len(cleaned) != len(set(cleaned)):
+        raise ValueError("list values must be unique")
+    return cleaned

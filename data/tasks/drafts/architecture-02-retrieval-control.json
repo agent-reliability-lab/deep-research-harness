@@ -1,0 +1,130 @@
+{
+  "schema_version": "0.2.0",
+  "task_id": "architecture-02-retrieval-control",
+  "task_version": "0.1.0",
+  "rubric_version": "0.1.0",
+  "lifecycle": "draft",
+  "family": "architecture_comparison",
+  "prompt": "Compare the retrieval-control boundary in Mem0 and Letta. Explain how Mem0 ranks externally stored memories, how Letta keeps memory blocks continuously available, and how Letta accesses archival memory through on-demand search. Conclude with the token-visibility trade-off without making unsupported latency or quality claims.",
+  "fixture_only": false,
+  "evaluation_mode": "judge_required",
+  "source_snapshot_id": null,
+  "source_requirements": [
+    {
+      "source_id": "mem0-memory-evaluation",
+      "source_type": "official_docs",
+      "canonical_url": "https://docs.mem0.ai/core-concepts/memory-evaluation",
+      "url_checked_at": "2026-06-22",
+      "required_topics": [
+        "semantic retrieval",
+        "BM25 retrieval",
+        "entity-aware retrieval",
+        "top-k ranking"
+      ],
+      "selection_rationale": "Official Mem0 architecture walkthrough describing the retrieval signals and ranking path."
+    },
+    {
+      "source_id": "letta-memory-blocks",
+      "source_type": "official_docs",
+      "canonical_url": "https://docs.letta.com/guides/core-concepts/memory/memory-blocks",
+      "url_checked_at": "2026-06-22",
+      "required_topics": [
+        "memory blocks in the context window",
+        "persistent always-visible state"
+      ],
+      "selection_rationale": "Official Letta documentation establishing that memory blocks are part of the active context rather than retrieved per query."
+    },
+    {
+      "source_id": "letta-archival-memory",
+      "source_type": "official_docs",
+      "canonical_url": "https://docs.letta.com/guides/core-concepts/memory/archival-memory",
+      "url_checked_at": "2026-06-22",
+      "required_topics": [
+        "semantic search over archival memory",
+        "tool-mediated retrieval",
+        "out-of-context storage"
+      ],
+      "selection_rationale": "Official Letta documentation for the on-demand external-memory retrieval path."
+    }
+  ],
+  "required_claims": [
+    {
+      "claim_id": "mem0-multi-signal-retrieval",
+      "description": "Mem0 retrieves and ranks external memories using multiple signals before returning a top-k set.",
+      "verification_status": "draft",
+      "acceptable_source_ids": [
+        "mem0-memory-evaluation"
+      ],
+      "evidence_patterns": [
+        "semantic",
+        "BM25",
+        "entity",
+        "top-k"
+      ],
+      "answer_patterns": [
+        "multiple",
+        "retrieval"
+      ]
+    },
+    {
+      "claim_id": "letta-blocks-continuously-visible",
+      "description": "Letta memory blocks remain available in the active context without a retrieval call.",
+      "verification_status": "draft",
+      "acceptable_source_ids": [
+        "letta-memory-blocks"
+      ],
+      "evidence_patterns": [
+        "in-context",
+        "always visible",
+        "context window"
+      ],
+      "answer_patterns": [
+        "memory blocks",
+        "always visible"
+      ]
+    },
+    {
+      "claim_id": "letta-archival-tool-retrieval",
+      "description": "Letta archival memory is searched through an on-demand retrieval path rather than continuously occupying active context.",
+      "verification_status": "draft",
+      "acceptable_source_ids": [
+        "letta-archival-memory"
+      ],
+      "evidence_patterns": [
+        "semantic search",
+        "tool",
+        "outside"
+      ],
+      "answer_patterns": [
+        "archival memory",
+        "search"
+      ]
+    }
+  ],
+  "acceptable_source_ids": [
+    "mem0-memory-evaluation",
+    "letta-memory-blocks",
+    "letta-archival-memory"
+  ],
+  "known_distractors": [
+    "Letta memory blocks require semantic search on every turn",
+    "Mem0 injects its entire memory database into every prompt",
+    "the documentation proves one architecture has lower latency"
+  ],
+  "required_comparison_dimensions": [
+    "retrieval trigger",
+    "ranking mechanism",
+    "active-context visibility",
+    "token-footprint implication"
+  ],
+  "citation_expectations": {
+    "minimum_citations": 3,
+    "minimum_unique_sources": 3
+  },
+  "rubric": {
+    "minimum_required_claim_coverage": 1.0,
+    "minimum_citation_precision": 1.0,
+    "minimum_citation_entailment": 1.0,
+    "maximum_distractor_mentions": 0
+  }
+}

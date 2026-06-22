@@ -1,14 +1,41 @@
 {
-  "schema_version": "0.1.0",
+  "schema_version": "0.2.0",
   "task_id": "fixture-mem0-architecture",
+  "task_version": "1.0.0",
+  "rubric_version": "1.0.0",
+  "lifecycle": "frozen",
   "family": "architecture_comparison",
   "prompt": "Using only the frozen sources, explain Mem0's base memory storage and its optional graph capability. Cite evidence for both claims.",
   "fixture_only": true,
   "evaluation_mode": "deterministic_fixture",
+  "source_snapshot_id": "g3-synthetic-memory-fixture-v1",
+  "source_requirements": [
+    {
+      "source_id": "src_mem0_docs",
+      "source_type": "synthetic_fixture",
+      "canonical_url": "https://example.invalid/fixtures/mem0-docs",
+      "url_checked_at": "2026-06-21",
+      "required_topics": [
+        "base vector storage"
+      ],
+      "selection_rationale": "Synthetic source for the fixture's base-storage claim."
+    },
+    {
+      "source_id": "src_mem0_paper",
+      "source_type": "synthetic_fixture",
+      "canonical_url": "https://example.invalid/fixtures/mem0-paper",
+      "url_checked_at": "2026-06-21",
+      "required_topics": [
+        "optional graph capability"
+      ],
+      "selection_rationale": "Synthetic source for the fixture's graph-layer claim."
+    }
+  ],
   "required_claims": [
     {
       "claim_id": "vector-store",
       "description": "Mem0 stores memories in a vector store.",
+      "verification_status": "verified",
       "acceptable_source_ids": [
         "src_mem0_docs"
       ],
@@ -22,6 +49,7 @@
     {
       "claim_id": "optional-graph",
       "description": "Mem0 can add an optional graph layer.",
+      "verification_status": "verified",
       "acceptable_source_ids": [
         "src_mem0_paper"
       ],

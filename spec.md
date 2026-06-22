@@ -246,6 +246,12 @@ pipeline records a scored result. Every run records an `evaluation_scope`, and
 metric aggregation rejects mixed scopes so fixture, development, primary, and
 external-validity traces cannot be pooled accidentally.
 
+Real tasks also use a fail-closed lifecycle. A `draft` task records source
+requirements and provisional claims but cannot pin a snapshot or enter the
+runner. A `frozen` task must pin the exact source snapshot and mark every
+required claim verified against that frozen text. Task and rubric versions are
+tracked independently so scoring changes do not masquerade as prompt changes.
+
 The public demo uses the full comparison question. The benchmark uses narrower cases so failures can be attributed.
 
 ## 10. Metrics

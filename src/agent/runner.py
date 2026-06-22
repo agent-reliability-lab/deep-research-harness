@@ -12,7 +12,7 @@ from uuid import UUID, uuid4
 from src.evidence import EvidenceStore
 from src.snapshots import SnapshotCorpus
 from src.tasks import BenchmarkTask, evaluate_fixture_run
-from src.tasks.models import EvaluationMode
+from src.tasks.models import EvaluationMode, TaskLifecycle
 from src.tools import TOOL_SCHEMAS, ToolExecutionError, ToolRuntime
 from src.trace.metrics import RunMetrics, compute_run_metrics
 from src.trace.models import (
@@ -70,6 +70,14 @@ class C0Runner:
         self.max_iterations = max_iterations
         self.output_dir = Path(output_dir)
         self.run_group_id = run_group_id
+        if task.lifecycle is not TaskLifecycle.FROZEN:
+            raise ValueError("C0 runner refuses draft tasks; freeze and verify first")
+        if task.source_snapshot_id != corpus.manifest.snapshot_id:
+            raise ValueError(
+                "task source_snapshot_id does not match loaded corpus: "
+                f"task={task.source_snapshot_id} "
+                f"corpus={corpus.manifest.snapshot_id}"
+            )
         corpus_source_ids = {entry.source_id for entry in corpus.entries()}
         missing_sources = set(task.acceptable_source_ids) - corpus_source_ids
         if missing_sources:

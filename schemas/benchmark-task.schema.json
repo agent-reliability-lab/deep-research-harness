@@ -21,6 +21,14 @@
       "title": "CitationExpectations",
       "type": "object"
     },
+    "ClaimVerificationStatus": {
+      "enum": [
+        "draft",
+        "verified"
+      ],
+      "title": "ClaimVerificationStatus",
+      "type": "string"
+    },
     "EvaluationMode": {
       "enum": [
         "deterministic_fixture",
@@ -42,6 +50,9 @@
           "minLength": 1,
           "title": "Description",
           "type": "string"
+        },
+        "verification_status": {
+          "$ref": "#/$defs/ClaimVerificationStatus"
         },
         "acceptable_source_ids": {
           "items": {
@@ -71,12 +82,72 @@
       "required": [
         "claim_id",
         "description",
+        "verification_status",
         "acceptable_source_ids",
         "evidence_patterns",
         "answer_patterns"
       ],
       "title": "RequiredClaim",
       "type": "object"
+    },
+    "SourceRequirement": {
+      "additionalProperties": false,
+      "properties": {
+        "source_id": {
+          "minLength": 1,
+          "pattern": "^[a-z0-9][a-z0-9._-]*$",
+          "title": "Source Id",
+          "type": "string"
+        },
+        "source_type": {
+          "$ref": "#/$defs/SourceType"
+        },
+        "canonical_url": {
+          "format": "uri",
+          "minLength": 1,
+          "title": "Canonical Url",
+          "type": "string"
+        },
+        "url_checked_at": {
+          "format": "date",
+          "title": "Url Checked At",
+          "type": "string"
+        },
+        "required_topics": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Required Topics",
+          "type": "array"
+        },
+        "selection_rationale": {
+          "minLength": 1,
+          "title": "Selection Rationale",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_id",
+        "source_type",
+        "canonical_url",
+        "url_checked_at",
+        "required_topics",
+        "selection_rationale"
+      ],
+      "title": "SourceRequirement",
+      "type": "object"
+    },
+    "SourceType": {
+      "enum": [
+        "synthetic_fixture",
+        "official_docs",
+        "official_repository",
+        "research_paper",
+        "third_party_analysis"
+      ],
+      "title": "SourceType",
+      "type": "string"
     },
     "TaskFamily": {
       "enum": [
@@ -87,6 +158,14 @@
         "product_recommendation"
       ],
       "title": "TaskFamily",
+      "type": "string"
+    },
+    "TaskLifecycle": {
+      "enum": [
+        "draft",
+        "frozen"
+      ],
+      "title": "TaskLifecycle",
       "type": "string"
     },
     "TaskRubric": {
@@ -129,7 +208,7 @@
   "additionalProperties": false,
   "properties": {
     "schema_version": {
-      "default": "0.1.0",
+      "default": "0.2.0",
       "title": "Schema Version",
       "type": "string"
     },
@@ -138,6 +217,19 @@
       "pattern": "^[a-z0-9][a-z0-9._-]*$",
       "title": "Task Id",
       "type": "string"
+    },
+    "task_version": {
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Task Version",
+      "type": "string"
+    },
+    "rubric_version": {
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Rubric Version",
+      "type": "string"
+    },
+    "lifecycle": {
+      "$ref": "#/$defs/TaskLifecycle"
     },
     "family": {
       "$ref": "#/$defs/TaskFamily"
@@ -153,6 +245,25 @@
     },
     "evaluation_mode": {
       "$ref": "#/$defs/EvaluationMode"
+    },
+    "source_snapshot_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Source Snapshot Id"
+    },
+    "source_requirements": {
+      "items": {
+        "$ref": "#/$defs/SourceRequirement"
+      },
+      "minItems": 1,
+      "title": "Source Requirements",
+      "type": "array"
     },
     "required_claims": {
       "items": {
@@ -193,10 +304,15 @@
   },
   "required": [
     "task_id",
+    "task_version",
+    "rubric_version",
+    "lifecycle",
     "family",
     "prompt",
     "fixture_only",
     "evaluation_mode",
+    "source_snapshot_id",
+    "source_requirements",
     "required_claims",
     "acceptable_source_ids",
     "citation_expectations",
