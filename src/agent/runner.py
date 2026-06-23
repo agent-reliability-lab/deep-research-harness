@@ -41,9 +41,10 @@ Never invent source IDs, evidence IDs, or claims not present in source text.
 Call at most {max_tool_calls_per_turn} tools in one assistant response. If more
 work remains, continue it in the next model turn instead of emitting a larger
 parallel batch.
-For record_evidence, copy one short contiguous excerpt exactly from the
-read_source cleaned_text. Preserve its whitespace and punctuation. Do not
-collapse line breaks, add punctuation, use ellipses, or join separate spans."""
+For record_evidence, give a short start_anchor and end_anchor: a few words
+copied from the read_source cleaned_text that bracket the evidence span. Keep
+each anchor short and within one line; the tool extracts the exact source span
+between them. Do not paste long excerpts or whole paragraphs."""
 
 
 @dataclass(frozen=True)

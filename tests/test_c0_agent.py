@@ -283,7 +283,7 @@ class C0RunnerTests(TestCase):
             str(first_model_call.request_messages[0].content),
         )
         self.assertIn(
-            "copy one short contiguous excerpt exactly",
+            "give a short start_anchor and end_anchor",
             str(first_model_call.request_messages[0].content),
         )
         record_schema = next(

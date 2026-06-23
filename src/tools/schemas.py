@@ -46,20 +46,41 @@ TOOL_SCHEMAS = [
         "function": {
             "name": "record_evidence",
             "description": (
-                "Persist one grounded evidence record linking a claim to a source."
+                "Persist one grounded evidence record linking a claim to a "
+                "source. Prefer start_anchor + end_anchor: give two short "
+                "phrases copied from the source that bracket the evidence, and "
+                "the tool extracts the exact frozen span between them."
             ),
             "parameters": {
                 "type": "object",
                 "properties": {
                     "source_id": {"type": "string", "minLength": 1},
                     "claim": {"type": "string", "minLength": 1},
+                    "start_anchor": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": (
+                            "A few words copied from the source cleaned_text "
+                            "marking where the evidence span begins. Keep it "
+                            "short and within a single line."
+                        ),
+                    },
+                    "end_anchor": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": (
+                            "A few words copied from the source cleaned_text "
+                            "marking where the evidence span ends (at or after "
+                            "start_anchor). Keep it short and within a line."
+                        ),
+                    },
                     "excerpt": {
                         "type": "string",
                         "minLength": 1,
                         "description": (
-                            "One short contiguous substring copied exactly from "
-                            "the source cleaned_text. Preserve whitespace and "
-                            "punctuation; do not join separate spans."
+                            "Legacy fallback: one short contiguous substring "
+                            "copied exactly from the source cleaned_text. Use "
+                            "start_anchor + end_anchor instead when possible."
                         ),
                     },
                     "confidence": {
@@ -69,6 +90,14 @@ TOOL_SCHEMAS = [
                     },
                 },
                 "required": ["source_id", "claim"],
+                # Anchors must come as a pair: a lone start_anchor (or lone
+                # end_anchor) would silently fall back to the legacy excerpt/
+                # claim path and re-introduce the grounding failure. Reject it
+                # at validation so a partial call fails loud, not silent.
+                "dependentRequired": {
+                    "start_anchor": ["end_anchor"],
+                    "end_anchor": ["start_anchor"],
+                },
                 "additionalProperties": False,
             },
         },

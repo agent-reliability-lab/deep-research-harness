@@ -31,7 +31,7 @@ from src.snapshots.markdown import clean_markdown
 from src.snapshots.models import CachedSource
 from src.tools import TOOL_SCHEMAS, ToolExecutionError, ToolRuntime
 from src.tools.bm25 import BM25Index, tokenize
-from src.tools.runtime import locate_grounded_excerpt
+from src.tools.runtime import extract_grounded_span, locate_grounded_excerpt
 from src.trace.models import (
     CallStatus,
     ChatMessage,
@@ -338,6 +338,56 @@ class ToolRuntimeTests(TestCase):
             )
         with self.assertRaisesRegex(ValueError, "must appear"):
             locate_grounded_excerpt(source, "The agent state is sometimes visible.")
+
+    def test_anchor_span_is_verbatim_and_whitespace_flexible(self) -> None:
+        source = (
+            "Memory blocks are structured sections of the agent's context "
+            "window\nthat persist across all interactions. They are always "
+            "visible.\nArchival memory is queried on-demand via tools."
+        )
+        # Short anchors bracket the span; the tool returns the exact frozen text.
+        span = extract_grounded_span(
+            source,
+            start_anchor="Memory blocks are",
+            end_anchor="all interactions.",
+        )
+        self.assertIn(span, source)
+        self.assertTrue(span.startswith("Memory blocks are structured"))
+        self.assertTrue(span.endswith("all interactions."))
+        # A literal escaped newline in an anchor still resolves across the real
+        # line break — this is the failure mode that broke verbatim excerpts.
+        across = extract_grounded_span(
+            source,
+            start_anchor="context window\\nthat persist",
+            end_anchor="always visible.",
+        )
+        self.assertIn(across, source)
+        self.assertIn("persist across all interactions", across)
+
+    def test_anchor_span_rejects_missing_and_ambiguous_anchors(self) -> None:
+        source = "alpha beta. gamma delta. alpha beta. epsilon."
+        with self.assertRaisesRegex(ValueError, "not found verbatim"):
+            extract_grounded_span(source, "no such phrase", "epsilon.")
+        with self.assertRaisesRegex(ValueError, "ambiguous"):
+            extract_grounded_span(source, "alpha beta", "epsilon.")
+
+    def test_record_evidence_schema_rejects_a_partial_anchor(self) -> None:
+        params = next(
+            tool["function"]["parameters"]
+            for tool in TOOL_SCHEMAS
+            if tool["function"]["name"] == "record_evidence"
+        )
+        validator = Draft202012Validator(params)
+        base = {"source_id": "s", "claim": "c"}
+        # Both anchors, or excerpt-only, are valid; a lone anchor is rejected so
+        # it cannot silently fall back to the broken excerpt/claim path.
+        self.assertEqual(
+            list(validator.iter_errors({**base, "start_anchor": "a", "end_anchor": "b"})),
+            [],
+        )
+        self.assertEqual(list(validator.iter_errors({**base, "excerpt": "x"})), [])
+        self.assertTrue(list(validator.iter_errors({**base, "start_anchor": "a"})))
+        self.assertTrue(list(validator.iter_errors({**base, "end_anchor": "b"})))
 
     def test_five_tools_emit_a_valid_trace_and_grounded_evidence(self) -> None:
         with TemporaryDirectory() as temp_dir:

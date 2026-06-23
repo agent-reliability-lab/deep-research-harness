@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import re
 import time
 from collections.abc import Callable
 from datetime import UTC, date, datetime
@@ -58,6 +59,50 @@ def locate_grounded_excerpt(source_text: str, proposed_excerpt: str) -> str:
             "frozen source text"
         )
     return source_text[first : first + len(proposed)]
+
+
+def extract_grounded_span(
+    source_text: str,
+    start_anchor: str,
+    end_anchor: str,
+    max_span_chars: int = 1500,
+) -> str:
+    """Extract the exact frozen span bracketed by two short anchors.
+
+    The agent supplies two short, distinctive anchors instead of a full verbatim
+    excerpt; the tool extracts the precise span from the frozen source. Anchors
+    match whitespace-flexibly: runs of whitespace, real newlines/tabs, and
+    literal ``\\n`` / ``\\t`` are all treated as flexible whitespace, so the
+    model's JSON escaping cannot break grounding. The returned span is always a
+    verbatim substring of ``source_text``.
+    """
+
+    def _compile(anchor: str, label: str) -> re.Pattern[str]:
+        tokens = [token for token in re.split(r"\s+|\\n|\\t|\\r", anchor.strip()) if token]
+        if not tokens:
+            raise ValueError(f"{label} anchor must contain visible text")
+        return re.compile(r"\s+".join(re.escape(token) for token in tokens))
+
+    def _unique(pattern: re.Pattern[str], label: str, start: int = 0) -> re.Match[str]:
+        matches = pattern.finditer(source_text, start)
+        first = next(matches, None)
+        if first is None:
+            raise ValueError(f"{label} anchor not found verbatim in the frozen source text")
+        if next(matches, None) is not None:
+            raise ValueError(f"{label} anchor is ambiguous in the frozen source text")
+        return first
+
+    start_match = _unique(_compile(start_anchor, "start"), "start")
+    end_match = _unique(_compile(end_anchor, "end"), "end", start_match.start())
+    if end_match.end() < start_match.end():
+        raise ValueError("end anchor resolves before the start anchor")
+    span = source_text[start_match.start() : end_match.end()]
+    if len(span) > max_span_chars:
+        raise ValueError(
+            f"grounded span is {len(span)} chars, over the {max_span_chars} "
+            "limit; use tighter anchors"
+        )
+    return span
 
 
 class ToolExecutionError(RuntimeError):
@@ -233,11 +278,16 @@ class ToolRuntime:
         source_id: str,
         claim: str,
         excerpt: str | None = None,
+        start_anchor: str | None = None,
+        end_anchor: str | None = None,
         confidence: float = 0.5,
     ) -> tuple[dict[str, Any], list[str]]:
         entry = self.corpus.entry(source_id)
         text = self.corpus.document(source_id).cleaned_text
-        grounded_excerpt = locate_grounded_excerpt(text, excerpt or claim)
+        if start_anchor is not None and end_anchor is not None:
+            grounded_excerpt = extract_grounded_span(text, start_anchor, end_anchor)
+        else:
+            grounded_excerpt = locate_grounded_excerpt(text, excerpt or claim)
         evidence_id = uuid4()
         evidence_event_id = uuid4()
         source_date = self._parse_source_date(entry.version_or_pub_date)
