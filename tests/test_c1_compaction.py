@@ -230,6 +230,10 @@ class C1RunnerTests(TestCase):
             validate_trace(events, outcome.evidence_path)
 
         self.assertEqual(events[0].configuration, Configuration.C1)
+        self.assertEqual(
+            events[0].model_parameters["max_tool_calls_per_turn"],
+            4,
+        )
         checkpoints = [
             event for event in events if isinstance(event, CheckpointEvent)
         ]

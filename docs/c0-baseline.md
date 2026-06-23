@@ -37,7 +37,7 @@ primary results.
 C0 fails closed on:
 
 - maximum iterations;
-- model-call and tool-call counts;
+- model-call, total tool-call, and per-turn tool-call counts;
 - active-context tokens for any single model call;
 - cumulative uncached input tokens and output tokens;
 - total model cost;
@@ -52,6 +52,13 @@ traces and is enforced only when explicitly supplied.
 A provider/network failure is `infra_api_failed` and excluded from the EGTSR
 denominator. Invalid model protocol, missing tool use, tool failure, and budget
 exhaustion are `agent_failed` and remain in the denominator.
+
+The default per-turn tool-call limit is four. The system prompt tells the model
+to continue larger batches over subsequent turns, and the runner rejects any
+response that exceeds the limit. This keeps large `record_evidence` batches
+from consuming the entire output budget or returning truncated function JSON.
+The value is recorded in the run's `model_parameters` and must remain identical
+across controlled configurations.
 
 ## Official DeepSeek development run
 

@@ -273,6 +273,15 @@ class C0RunnerTests(TestCase):
             sum(event.event_type == "tool_execution" for event in events),
             6,
         )
+        start = events[0]
+        self.assertEqual(start.model_parameters["max_tool_calls_per_turn"], 4)
+        first_model_call = next(
+            event for event in events if isinstance(event, ModelCallEvent)
+        )
+        self.assertIn(
+            "Call at most 4 tools",
+            str(first_model_call.request_messages[0].content),
+        )
         self.assertTrue(outcome.report_path and outcome.report_path.exists())
 
     def test_deterministic_answer_contract_requires_every_pattern(self) -> None:
@@ -441,6 +450,50 @@ class C0RunnerTests(TestCase):
             outcome.failure_label,
             "output_format_failure:finalize_must_be_only_call",
         )
+
+    def test_per_turn_tool_call_limit_fails_closed_before_execution(
+        self,
+    ) -> None:
+        response = completion(
+            tool_calls=[
+                ToolCallRequest(
+                    id=f"search-{index}",
+                    name="search_sources",
+                    arguments={"query": f"memory {index}"},
+                )
+                for index in range(5)
+            ]
+        )
+        outcome, events = self.run_with(StaticProvider(response))
+        self.assertEqual(
+            outcome.failure_label,
+            "output_format_failure:too_many_tool_calls_per_turn",
+        )
+        self.assertEqual(
+            sum(event.event_type == "tool_execution" for event in events),
+            0,
+        )
+        model_event = next(
+            event for event in events if isinstance(event, ModelCallEvent)
+        )
+        self.assertEqual(len(model_event.response_tool_calls), 5)
+
+    def test_per_turn_tool_call_limit_must_be_positive(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            with self.assertRaisesRegex(
+                ValueError,
+                "max_tool_calls_per_turn",
+            ):
+                C0Runner(
+                    task=self.task,
+                    corpus=self.corpus,
+                    provider=FixtureProvider(),
+                    budget=budget(),
+                    max_iterations=10,
+                    output_dir=Path(temp_dir) / "run",
+                    run_group_id="invalid-per-turn-limit",
+                    max_tool_calls_per_turn=0,
+                )
 
     def test_real_task_completion_is_judge_pending_not_scored_success(self) -> None:
         judge_claims = [

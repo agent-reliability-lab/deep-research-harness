@@ -37,7 +37,10 @@ from .provider import ModelCompletion, ModelProtocolError, ModelProvider
 SYSTEM_PROMPT = """You are an evidence-grounded research agent.
 Use only the supplied frozen-corpus tools. Search before reading, record each
 claim as evidence, and finish by calling finalize with the evidence UUIDs.
-Never invent source IDs, evidence IDs, or claims not present in source text."""
+Never invent source IDs, evidence IDs, or claims not present in source text.
+Call at most {max_tool_calls_per_turn} tools in one assistant response. If more
+work remains, continue it in the next model turn instead of emitting a larger
+parallel batch."""
 
 
 @dataclass(frozen=True)
@@ -64,6 +67,7 @@ class C0Runner:
         max_iterations: int,
         output_dir: str | Path,
         run_group_id: str,
+        max_tool_calls_per_turn: int = 4,
     ) -> None:
         task = BenchmarkTask.model_validate(task.model_dump())
         self.task = task
@@ -73,6 +77,9 @@ class C0Runner:
         self.max_iterations = max_iterations
         self.output_dir = Path(output_dir)
         self.run_group_id = run_group_id
+        if max_tool_calls_per_turn < 1:
+            raise ValueError("max_tool_calls_per_turn must be at least 1")
+        self.max_tool_calls_per_turn = max_tool_calls_per_turn
         if task.lifecycle is not TaskLifecycle.FROZEN:
             raise ValueError("C0 runner refuses draft tasks; freeze and verify first")
         if task.source_snapshot_id != corpus.manifest.snapshot_id:
@@ -121,7 +128,10 @@ class C0Runner:
             provider=self.provider.provider_name,
             endpoint_class=self.provider.endpoint_class,
             requested_model=self.provider.model,
-            model_parameters=self.provider.model_parameters,
+            model_parameters={
+                **self.provider.model_parameters,
+                "max_tool_calls_per_turn": self.max_tool_calls_per_turn,
+            },
             source_snapshot_id=self.corpus.manifest.snapshot_id,
             pricing_version=self.provider.pricing_version,
             budget=self.budget,
@@ -136,7 +146,12 @@ class C0Runner:
             within_budget=tracker.within_limits,
         )
         messages = [
-            ChatMessage(role="system", content=SYSTEM_PROMPT),
+            ChatMessage(
+                role="system",
+                content=SYSTEM_PROMPT.format(
+                    max_tool_calls_per_turn=self.max_tool_calls_per_turn,
+                ),
+            ),
             ChatMessage(role="user", content=self.task.prompt),
         ]
         last_model_input_tokens: int | None = None
@@ -310,6 +325,18 @@ class C0Runner:
                     tracker=tracker,
                     status=EvaluationStatus.AGENT_FAILED,
                     failure_label="output_format_failure:missing_tool_call",
+                    included_in_denominator=True,
+                )
+            if len(completion.tool_calls) > self.max_tool_calls_per_turn:
+                return self._finish_failure(
+                    writer=writer,
+                    evidence=evidence,
+                    tracker=tracker,
+                    status=EvaluationStatus.AGENT_FAILED,
+                    failure_label=(
+                        "output_format_failure:"
+                        "too_many_tool_calls_per_turn"
+                    ),
                     included_in_denominator=True,
                 )
             finalize_calls = [

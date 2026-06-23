@@ -59,6 +59,15 @@ def _add_common_arguments(
     parser.add_argument("--max-model-calls", type=int, default=10)
     parser.add_argument("--max-tool-calls", type=int, default=20)
     parser.add_argument(
+        "--max-tool-calls-per-turn",
+        type=int,
+        default=4,
+        help=(
+            "maximum tool calls accepted from one assistant response; "
+            "larger batches fail closed"
+        ),
+    )
+    parser.add_argument(
         "--max-active-context-tokens",
         type=int,
         default=100_000,
@@ -150,6 +159,7 @@ def main(argv: list[str] | None = None) -> int:
         max_iterations=args.max_iterations,
         output_dir=args.output,
         run_group_id=args.run_group_id,
+        max_tool_calls_per_turn=args.max_tool_calls_per_turn,
         **runner_kwargs,
     ).run()
     aggregate = aggregate_run_metrics([outcome.metrics])

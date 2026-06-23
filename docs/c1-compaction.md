@@ -16,6 +16,8 @@ python -m src.agent.cli fixture \
 The deliberately small active-context budget makes the synthetic fixture fire
 the control. Real DeepSeek stressing runs keep the controlled 100,000-token
 active-context budget, so the committed 0.60 trigger fires at 60,000.
+C0 and C1 also share the same per-turn tool-call limit; changing that limit in
+only one configuration would invalidate the ablation.
 
 ## Trigger
 
