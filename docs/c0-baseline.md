@@ -60,6 +60,12 @@ from consuming the entire output budget or returning truncated function JSON.
 The value is recorded in the run's `model_parameters` and must remain identical
 across controlled configurations.
 
+The evidence tool separately requires a short contiguous excerpt copied exactly
+from frozen `cleaned_text`. The prompt and tool schema both forbid collapsing
+line breaks, adding punctuation, ellipsizing, or combining separate spans. The
+runtime still verifies the excerpt against frozen bytes and fails closed; this
+guidance improves protocol compliance without weakening evidence grounding.
+
 ## Official DeepSeek development run
 
 Live runs require a pricing file so cost accounting and the cost budget cannot

@@ -40,7 +40,10 @@ claim as evidence, and finish by calling finalize with the evidence UUIDs.
 Never invent source IDs, evidence IDs, or claims not present in source text.
 Call at most {max_tool_calls_per_turn} tools in one assistant response. If more
 work remains, continue it in the next model turn instead of emitting a larger
-parallel batch."""
+parallel batch.
+For record_evidence, copy one short contiguous excerpt exactly from the
+read_source cleaned_text. Preserve its whitespace and punctuation. Do not
+collapse line breaks, add punctuation, use ellipses, or join separate spans."""
 
 
 @dataclass(frozen=True)

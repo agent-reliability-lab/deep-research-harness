@@ -282,6 +282,19 @@ class C0RunnerTests(TestCase):
             "Call at most 4 tools",
             str(first_model_call.request_messages[0].content),
         )
+        self.assertIn(
+            "copy one short contiguous excerpt exactly",
+            str(first_model_call.request_messages[0].content),
+        )
+        record_schema = next(
+            tool["function"]["parameters"]
+            for tool in first_model_call.tool_schemas
+            if tool["function"]["name"] == "record_evidence"
+        )
+        self.assertIn(
+            "contiguous substring copied exactly",
+            record_schema["properties"]["excerpt"]["description"],
+        )
         self.assertTrue(outcome.report_path and outcome.report_path.exists())
 
     def test_deterministic_answer_contract_requires_every_pattern(self) -> None:

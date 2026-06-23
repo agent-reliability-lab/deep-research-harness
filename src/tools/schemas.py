@@ -53,7 +53,15 @@ TOOL_SCHEMAS = [
                 "properties": {
                     "source_id": {"type": "string", "minLength": 1},
                     "claim": {"type": "string", "minLength": 1},
-                    "excerpt": {"type": "string", "minLength": 1},
+                    "excerpt": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": (
+                            "One short contiguous substring copied exactly from "
+                            "the source cleaned_text. Preserve whitespace and "
+                            "punctuation; do not join separate spans."
+                        ),
+                    },
                     "confidence": {
                         "type": "number",
                         "minimum": 0,
