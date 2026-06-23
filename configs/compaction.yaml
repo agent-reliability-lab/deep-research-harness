@@ -1,0 +1,5 @@
+schema_version: 0.1.0
+enabled: true
+trigger_fraction: 0.60
+strategy: tool_result_clearing
+max_compactions: 4

@@ -80,6 +80,7 @@ Infrastructure failures, source failures, expected policy blocks, and agent fail
 - [x] Benchmark lifecycle, two frozen deterministic tasks, and two judge drafts defined
 - [x] Deterministic benchmark scoring path isolated from judge-required tasks
 - [x] First two-task development EGTSR reproduced from frozen official sources
+- [x] C1 Form A compaction validated against an offline integration fixture
 - [ ] C0 primary-provider run completed after G4
 - [ ] 80-run primary matrix completed
 - [ ] 32-run external-validity subset completed
@@ -109,6 +110,9 @@ claims and source snapshot are frozen.
 The first two-task C0 development run is published as a copyright-safe
 [processed metrics summary](results/processed/c0-development-frozen-v1.json);
 raw traces remain local because `read_source` events contain cache-only text.
+
+The C1 trigger, reload-pointer strategy, checkpoint contract, and measurement
+sequence are documented in [C1 compaction](docs/c1-compaction.md).
 
 ## Planned repository shape
 

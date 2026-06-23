@@ -337,6 +337,25 @@
           "title": "Event Type",
           "type": "string"
         },
+        "strategy": {
+          "default": "unspecified",
+          "minLength": 1,
+          "title": "Strategy",
+          "type": "string"
+        },
+        "checkpoint_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Checkpoint Id"
+        },
         "input_tokens": {
           "exclusiveMinimum": 0,
           "title": "Input Tokens",
@@ -360,6 +379,32 @@
           },
           "title": "Required Fact Ids",
           "type": "array"
+        },
+        "summary_model_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Summary Model Call Id"
+        },
+        "summary_cost_usd": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            }
+          ],
+          "default": "0",
+          "title": "Summary Cost Usd"
         }
       },
       "required": [

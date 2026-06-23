@@ -12,6 +12,8 @@ from src.tasks.load import load_task
 from src.trace.metrics import aggregate_run_metrics
 from src.trace.models import EvaluationStatus, RunBudget
 
+from .c1 import C1Runner
+from .compaction import load_compaction_config
 from .deepseek import DeepSeekProvider, load_pricing
 from .fixture import FixtureProvider
 from .runner import C0Runner
@@ -43,6 +45,16 @@ def _add_common_arguments(
     )
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--run-group-id", default="c0-development")
+    parser.add_argument(
+        "--configuration",
+        choices=("C0", "C1"),
+        default="C0",
+    )
+    parser.add_argument(
+        "--compaction-config",
+        type=Path,
+        default=REPO_ROOT / "configs" / "compaction.yaml",
+    )
     parser.add_argument("--max-iterations", type=int, default=10)
     parser.add_argument("--max-model-calls", type=int, default=10)
     parser.add_argument("--max-tool-calls", type=int, default=20)
@@ -122,7 +134,15 @@ def main(argv: list[str] | None = None) -> int:
             kwargs["model"] = args.model
         provider = DeepSeekProvider(**kwargs)
 
-    outcome = C0Runner(
+    runner_kwargs = {}
+    runner_class = C0Runner
+    if args.configuration == "C1":
+        runner_class = C1Runner
+        runner_kwargs["compaction_config"] = load_compaction_config(
+            args.compaction_config
+        )
+
+    outcome = runner_class(
         task=task,
         corpus=corpus,
         provider=provider,
@@ -130,12 +150,14 @@ def main(argv: list[str] | None = None) -> int:
         max_iterations=args.max_iterations,
         output_dir=args.output,
         run_group_id=args.run_group_id,
+        **runner_kwargs,
     ).run()
     aggregate = aggregate_run_metrics([outcome.metrics])
     print(
         json.dumps(
             {
                 "run_id": str(outcome.run_id),
+                "configuration": args.configuration,
                 "status": outcome.status,
                 "failure_label": outcome.failure_label,
                 "fixture_only": task.fixture_only,

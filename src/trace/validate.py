@@ -77,10 +77,14 @@ def validate_trace(
     recorded_ids: set[UUID] = set()
     evidence_event_ids: dict[UUID, UUID] = {}
     emitted_tool_calls: dict[str, tuple[UUID, str, dict]] = {}
+    model_calls_by_id: dict[str, ModelCallEvent] = {}
     executed_tool_call_ids: set[str] = set()
     checkpoint_ids: set[UUID] = set()
     for event in events:
         if isinstance(event, ModelCallEvent):
+            if event.call_id in model_calls_by_id:
+                problems.append(f"duplicate model call_id {event.call_id}")
+            model_calls_by_id[event.call_id] = event
             start = events[0]
             if isinstance(start, RunStartedEvent):
                 if event.requested_model != start.requested_model:
@@ -161,6 +165,30 @@ def validate_trace(
             if event.checkpoint_id in checkpoint_ids:
                 problems.append(f"duplicate checkpoint_id {event.checkpoint_id}")
             checkpoint_ids.add(event.checkpoint_id)
+        elif event.event_type == "compaction":
+            if (
+                event.checkpoint_id is not None
+                and event.checkpoint_id not in checkpoint_ids
+            ):
+                problems.append(
+                    "compaction references unknown checkpoint_id "
+                    f"{event.checkpoint_id}"
+                )
+            if event.summary_model_call_id is not None:
+                summary_call = model_calls_by_id.get(
+                    event.summary_model_call_id
+                )
+                if summary_call is None:
+                    problems.append(
+                        "compaction references unknown summary model call_id "
+                        f"{event.summary_model_call_id}"
+                    )
+                elif summary_call.cost.total_usd != event.summary_cost_usd:
+                    problems.append(
+                        "compaction summary cost does not match model call: "
+                        f"event={event.summary_cost_usd} "
+                        f"model_call={summary_call.cost.total_usd}"
+                    )
         elif event.event_type == "recovery" and event.checkpoint_id not in checkpoint_ids:
             problems.append(f"recovery references unknown checkpoint_id {event.checkpoint_id}")
 

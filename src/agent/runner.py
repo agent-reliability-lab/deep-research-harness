@@ -52,6 +52,8 @@ class RunOutcome:
 
 
 class C0Runner:
+    configuration = Configuration.C0
+
     def __init__(
         self,
         *,
@@ -110,7 +112,7 @@ class C0Runner:
             task_id=self.task.task_id,
             task_version=self.task.task_version,
             rubric_version=self.task.rubric_version,
-            configuration=Configuration.C0,
+            configuration=self.configuration,
             evaluation_scope=(
                 EvaluationScope.FIXTURE
                 if self.task.fixture_only
@@ -137,6 +139,7 @@ class C0Runner:
             ChatMessage(role="system", content=SYSTEM_PROMPT),
             ChatMessage(role="user", content=self.task.prompt),
         ]
+        last_model_input_tokens: int | None = None
 
         while True:
             try:
@@ -150,6 +153,13 @@ class C0Runner:
                     failure_label=f"budget_exhausted:{exc.limit}",
                     included_in_denominator=True,
                 )
+            messages, pending_control = self._prepare_messages_for_model_call(
+                messages=messages,
+                writer=writer,
+                evidence=evidence,
+                tracker=tracker,
+                last_model_input_tokens=last_model_input_tokens,
+            )
 
             parent_event_id = self._require_last_event_id(writer)
             call_id = f"model-{tracker.model_calls}"
@@ -274,6 +284,13 @@ class C0Runner:
                 latency_ms=completion.latency_ms,
             )
             writer.append(model_event)
+            self._append_post_model_call_events(
+                pending_control=pending_control,
+                completion=completion,
+                model_event=model_event,
+                writer=writer,
+            )
+            last_model_input_tokens = completion.usage.input_tokens
             try:
                 tracker.after_model_call(completion.usage, completion.cost)
             except BudgetExceeded as exc:
@@ -369,6 +386,28 @@ class C0Runner:
                         evidence=evidence,
                         tracker=tracker,
                     )
+
+    def _prepare_messages_for_model_call(
+        self,
+        *,
+        messages: list[ChatMessage],
+        writer: TraceWriter,
+        evidence: EvidenceStore,
+        tracker: BudgetTracker,
+        last_model_input_tokens: int | None,
+    ) -> tuple[list[ChatMessage], object | None]:
+        del writer, evidence, tracker, last_model_input_tokens
+        return messages, None
+
+    def _append_post_model_call_events(
+        self,
+        *,
+        pending_control: object | None,
+        completion: ModelCompletion,
+        model_event: ModelCallEvent,
+        writer: TraceWriter,
+    ) -> None:
+        del pending_control, completion, model_event, writer
 
     def _finish_success(
         self,

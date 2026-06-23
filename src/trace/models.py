@@ -229,10 +229,25 @@ class PermissionDecisionEvent(EventBase):
 
 class CompactionEvent(EventBase):
     event_type: Literal["compaction"] = "compaction"
+    strategy: str = Field(default="unspecified", min_length=1)
+    checkpoint_id: UUID | None = None
     input_tokens: int = Field(gt=0)
     output_tokens: int = Field(ge=0)
     preserved_fact_ids: list[str] = Field(default_factory=list)
     required_fact_ids: list[str] = Field(default_factory=list)
+    summary_model_call_id: str | None = None
+    summary_cost_usd: Decimal = Field(default=Decimal("0"), ge=0)
+
+    @model_validator(mode="after")
+    def validate_summary_cost_reference(self) -> CompactionEvent:
+        if (
+            self.summary_model_call_id is None
+            and self.summary_cost_usd != Decimal("0")
+        ):
+            raise ValueError(
+                "summary_cost_usd requires summary_model_call_id"
+            )
+        return self
 
 
 class SubagentHandoffEvent(EventBase):
