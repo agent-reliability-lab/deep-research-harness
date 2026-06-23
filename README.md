@@ -143,6 +143,71 @@ deep-research-harness/
 └── docs/
 ```
 
+## Status & findings
+
+Updated 2026-06. Status is honest, not aspirational — the spec is the target;
+this section is what is actually shipped.
+
+### Done
+- **Provider qualification gates G1–G4** — identity, cache accounting, tool
+  fidelity, stability. All four real-PASS on `deepseek-v4-flash`; failed probes
+  are preserved as evidence rather than retried.
+- **Append-only trace + evidence contracts** — 12 event types, 7-field
+  evidence records, lineage invariants enforced (no orphan citations,
+  no unknown tool_call_ids, no sequence gaps).
+- **Frozen-corpus tool bridge** — SHA-256 fail-closed integrity; full source
+  text stays in a gitignored cache (no third-party redistribution); manifest
+  is publicly verifiable.
+- **C0 ReAct baseline** — budgeted (cache-aware: caps on uncached input,
+  active-context per-call, cost), end-to-end traceable. First real C0 run on
+  two deterministic frozen tasks: EGTSR 1.0, cost-per-success ≈ $0.00086,
+  98% prompt-cache hit. The "1.0" is a two-task smoke result, not capability.
+- **Real-run debugging surfaced four measurement bugs** that scripted fixtures
+  could not (markdown cleaning, rubric false-negative, citation parsing,
+  trace versioning). Fixing the ruler, not the agent, was the real work.
+- **C1 compaction (Form A: tool-result clearing + reload pointers)** —
+  offline integration fixture: compaction fires, 100% critical-fact retention.
+  See [C1 compaction](docs/c1-compaction.md).
+- **Anchor-based grounding** — `record_evidence` accepts short start/end
+  anchors; the tool extracts the verbatim span from frozen source text with
+  whitespace-flexible matching. Partial anchors are rejected at schema
+  validation so they cannot silently fall back to the broken excerpt path.
+
+### Headline finding (counter-intuitive, kept on purpose)
+
+> **Context saved ≠ cost saved.** Form A compaction can shrink a single model
+> call's active context while **raising** run cost, because rewriting earlier
+> turns invalidates the prompt-cache prefix. Run-level peak can rebound via
+> reload even when an isolated compaction ratio looks excellent. The naive
+> "compaction = savings" framing is wrong under prefix caching; cost-per-success
+> is the honest metric.
+
+This is why this lab exists: in evaluation, the measurement bugs are usually
+more interesting than the headline number.
+
+### In progress
+- **C1 Form B** (summarize + new window) — designed; not yet measured. The
+  anchor interface above is the prerequisite that lets compaction not force
+  a reload-and-rebound.
+- **Clean C0-vs-C1 quality comparison** — unblocked now that grounding no
+  longer fails on literal `\n` escapes.
+
+### Deferred (explicit non-goals for this milestone)
+- C2 permission gate and threat fixtures.
+- C3 sub-agent delegation.
+- LLM-as-judge and its own calibration gate.
+- 80-run primary matrix and the Claude / AiHubMix external-validity subset.
+
+These are spec'd; the next milestone gates them.
+
+### What this repo can and cannot claim
+**Can**: a reproducible, cache-aware, end-to-end harness with explicit
+provider trust gates, evidence-grounded scoring, and an honest cost-vs-peak
+finding under prefix caching.
+**Cannot**: statistical generality, clean per-component causal attribution
+(configs are cumulative), or cross-model/domain transfer. One run per cell;
+single model; single domain.
+
 ## Related work
 
 The preceding measurement-layer project is [Chinese Long-Context LLM Benchmark V2](https://github.com/agent-reliability-lab/llm-long-context-eval-zh-V2).
