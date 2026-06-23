@@ -344,7 +344,10 @@ The permission evaluator must distinguish:
 
 ## 12. Compaction design
 
-Trigger compaction at a configurable percentage of the context budget.
+Trigger compaction at a configurable percentage of the per-call active-context
+budget (`max_active_context_tokens`), not cumulative input tokens across model
+calls. Cumulative uncached input, output, cost, call count, and duration remain
+independent run-level guardrails.
 
 The compacted state must preserve:
 

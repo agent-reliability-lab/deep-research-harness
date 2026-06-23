@@ -123,7 +123,8 @@ def append_run_start(writer: TraceWriter, run_id: UUID) -> RunStartedEvent:
         budget=RunBudget(
             max_model_calls=20,
             max_tool_calls=40,
-            max_input_tokens=100_000,
+            max_active_context_tokens=100_000,
+            max_uncached_input_tokens=100_000,
             max_output_tokens=20_000,
             max_cost_usd=Decimal("5"),
             max_duration_ms=600_000,

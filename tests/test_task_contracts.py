@@ -164,7 +164,8 @@ class TaskLifecycleTests(TestCase):
                     budget=RunBudget(
                         max_model_calls=10,
                         max_tool_calls=20,
-                        max_input_tokens=100_000,
+                        max_active_context_tokens=100_000,
+                        max_uncached_input_tokens=100_000,
                         max_output_tokens=20_000,
                         max_cost_usd=5,
                         max_duration_ms=60_000,
@@ -201,7 +202,8 @@ class TaskLifecycleTests(TestCase):
                     budget=RunBudget(
                         max_model_calls=10,
                         max_tool_calls=20,
-                        max_input_tokens=100_000,
+                        max_active_context_tokens=100_000,
+                        max_uncached_input_tokens=100_000,
                         max_output_tokens=20_000,
                         max_cost_usd=5,
                         max_duration_ms=60_000,
@@ -233,7 +235,8 @@ class TaskLifecycleTests(TestCase):
                     budget=RunBudget(
                         max_model_calls=10,
                         max_tool_calls=20,
-                        max_input_tokens=100_000,
+                        max_active_context_tokens=100_000,
+                        max_uncached_input_tokens=100_000,
                         max_output_tokens=20_000,
                         max_cost_usd=5,
                         max_duration_ms=60_000,

@@ -26,6 +26,8 @@ class BudgetSnapshot:
     model_calls: int
     tool_calls: int
     input_tokens: int
+    uncached_input_tokens: int
+    peak_active_context_tokens: int
     output_tokens: int
     cost_usd: Decimal
     duration_ms: int
@@ -49,6 +51,8 @@ class BudgetTracker:
         self.model_calls = 0
         self.tool_calls = 0
         self.input_tokens = 0
+        self.uncached_input_tokens = 0
+        self.peak_active_context_tokens = 0
         self.output_tokens = 0
         self.cost_usd = Decimal("0")
 
@@ -58,6 +62,8 @@ class BudgetTracker:
             model_calls=self.model_calls,
             tool_calls=self.tool_calls,
             input_tokens=self.input_tokens,
+            uncached_input_tokens=self.uncached_input_tokens,
+            peak_active_context_tokens=self.peak_active_context_tokens,
             output_tokens=self.output_tokens,
             cost_usd=self.cost_usd,
             duration_ms=self.duration_ms,
@@ -96,13 +102,31 @@ class BudgetTracker:
 
     def after_model_call(self, usage: ModelUsage, cost: CallCost) -> None:
         self.input_tokens += usage.input_tokens
+        self.uncached_input_tokens += usage.uncached_input_tokens
+        self.peak_active_context_tokens = max(
+            self.peak_active_context_tokens,
+            usage.input_tokens,
+        )
         self.output_tokens += usage.output_tokens
         self.cost_usd += cost.total_usd
-        self._check_limit(
-            "max_input_tokens",
-            self.input_tokens,
-            self.budget.max_input_tokens,
-        )
+        if self.budget.max_active_context_tokens is not None:
+            self._check_limit(
+                "max_active_context_tokens",
+                usage.input_tokens,
+                self.budget.max_active_context_tokens,
+            )
+        if self.budget.max_uncached_input_tokens is not None:
+            self._check_limit(
+                "max_uncached_input_tokens",
+                self.uncached_input_tokens,
+                self.budget.max_uncached_input_tokens,
+            )
+        if self.budget.max_input_tokens is not None:
+            self._check_limit(
+                "max_input_tokens",
+                self.input_tokens,
+                self.budget.max_input_tokens,
+            )
         self._check_limit(
             "max_output_tokens",
             self.output_tokens,
@@ -134,7 +158,20 @@ class BudgetTracker:
             self.iterations <= self.max_iterations
             and self.model_calls <= self.budget.max_model_calls
             and self.tool_calls <= self.budget.max_tool_calls
-            and self.input_tokens <= self.budget.max_input_tokens
+            and (
+                self.budget.max_active_context_tokens is None
+                or self.peak_active_context_tokens
+                <= self.budget.max_active_context_tokens
+            )
+            and (
+                self.budget.max_uncached_input_tokens is None
+                or self.uncached_input_tokens
+                <= self.budget.max_uncached_input_tokens
+            )
+            and (
+                self.budget.max_input_tokens is None
+                or self.input_tokens <= self.budget.max_input_tokens
+            )
             and self.output_tokens <= self.budget.max_output_tokens
             and self.cost_usd <= self.budget.max_cost_usd
             and self.duration_ms <= self.budget.max_duration_ms

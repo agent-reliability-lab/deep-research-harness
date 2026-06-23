@@ -61,7 +61,26 @@ class PermissionVerdict(StrEnum):
 class RunBudget(StrictModel):
     max_model_calls: int = Field(gt=0)
     max_tool_calls: int = Field(gt=0)
-    max_input_tokens: int = Field(gt=0)
+    max_active_context_tokens: int | None = Field(
+        default=None,
+        gt=0,
+        description="Maximum input tokens reported for any single model call.",
+    )
+    max_uncached_input_tokens: int | None = Field(
+        default=None,
+        gt=0,
+        description=(
+            "Maximum cumulative input tokens not served from provider cache."
+        ),
+    )
+    max_input_tokens: int | None = Field(
+        default=None,
+        gt=0,
+        description=(
+            "Deprecated cumulative raw-input guard retained only for backward "
+            "compatibility with older traces."
+        ),
+    )
     max_output_tokens: int = Field(gt=0)
     max_cost_usd: Decimal = Field(ge=0)
     max_duration_ms: int = Field(gt=0)
@@ -85,6 +104,17 @@ class ModelUsage(StrictModel):
     output_tokens: int = Field(ge=0)
     cache_hit_tokens: int = Field(default=0, ge=0)
     cache_miss_tokens: int = Field(default=0, ge=0)
+
+    @property
+    def uncached_input_tokens(self) -> int:
+        """Input tokens billed at the uncached rate.
+
+        ``input_tokens - cache_hit_tokens`` also works for providers that omit
+        an explicit cache-miss field. Provider adapters remain responsible for
+        rejecting impossible cache accounting.
+        """
+
+        return max(0, self.input_tokens - self.cache_hit_tokens)
 
 
 class CallCost(StrictModel):

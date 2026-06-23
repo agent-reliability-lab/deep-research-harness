@@ -46,7 +46,24 @@ def _add_common_arguments(
     parser.add_argument("--max-iterations", type=int, default=10)
     parser.add_argument("--max-model-calls", type=int, default=10)
     parser.add_argument("--max-tool-calls", type=int, default=20)
-    parser.add_argument("--max-input-tokens", type=int, default=100_000)
+    parser.add_argument(
+        "--max-active-context-tokens",
+        type=int,
+        default=100_000,
+        help="maximum input tokens in any single model call",
+    )
+    parser.add_argument(
+        "--max-uncached-input-tokens",
+        type=int,
+        default=100_000,
+        help="maximum cumulative input tokens not served from provider cache",
+    )
+    parser.add_argument(
+        "--max-input-tokens",
+        type=int,
+        default=None,
+        help=argparse.SUPPRESS,
+    )
     parser.add_argument("--max-output-tokens", type=int, default=20_000)
     parser.add_argument("--max-cost-usd", type=Decimal, default=Decimal("5"))
     parser.add_argument("--max-duration-ms", type=int, default=600_000)
@@ -86,6 +103,8 @@ def main(argv: list[str] | None = None) -> int:
     budget = RunBudget(
         max_model_calls=args.max_model_calls,
         max_tool_calls=args.max_tool_calls,
+        max_active_context_tokens=args.max_active_context_tokens,
+        max_uncached_input_tokens=args.max_uncached_input_tokens,
         max_input_tokens=args.max_input_tokens,
         max_output_tokens=args.max_output_tokens,
         max_cost_usd=args.max_cost_usd,

@@ -38,6 +38,7 @@ class RunMetrics(MetricsModel):
     total_cost_usd: Decimal = Field(ge=0)
     cost_per_success_usd: Decimal | None
     input_tokens: int = Field(ge=0)
+    uncached_input_tokens: int = Field(ge=0)
     output_tokens: int = Field(ge=0)
     cache_hit_tokens: int = Field(ge=0)
     peak_active_context_tokens: int = Field(ge=0)
@@ -138,6 +139,9 @@ def compute_run_metrics(events: list[TraceEvent]) -> RunMetrics:
             else None
         ),
         input_tokens=sum(usage.input_tokens for usage in usages),
+        uncached_input_tokens=sum(
+            usage.uncached_input_tokens for usage in usages
+        ),
         output_tokens=sum(usage.output_tokens for usage in usages),
         cache_hit_tokens=sum(usage.cache_hit_tokens for usage in usages),
         peak_active_context_tokens=max(

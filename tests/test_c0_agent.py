@@ -48,7 +48,8 @@ def budget(**overrides) -> RunBudget:
     values = {
         "max_model_calls": 10,
         "max_tool_calls": 20,
-        "max_input_tokens": 100_000,
+        "max_active_context_tokens": 100_000,
+        "max_uncached_input_tokens": 100_000,
         "max_output_tokens": 20_000,
         "max_cost_usd": Decimal("5"),
         "max_duration_ms": 60_000,
@@ -100,7 +101,8 @@ class BudgetTrackerTests(TestCase):
             budget(
                 max_model_calls=2,
                 max_tool_calls=1,
-                max_input_tokens=10,
+                max_active_context_tokens=10,
+                max_uncached_input_tokens=10,
                 max_output_tokens=5,
                 max_cost_usd=Decimal("0.5"),
                 max_duration_ms=100,
@@ -126,8 +128,14 @@ class BudgetTrackerTests(TestCase):
     def test_post_call_token_and_cost_overages_raise(self) -> None:
         cases = [
             (
-                "max_input_tokens",
-                budget(max_input_tokens=9),
+                "max_active_context_tokens",
+                budget(max_active_context_tokens=9),
+                ModelUsage(input_tokens=10, output_tokens=1),
+                CallCost(),
+            ),
+            (
+                "max_uncached_input_tokens",
+                budget(max_uncached_input_tokens=9),
                 ModelUsage(input_tokens=10, output_tokens=1),
                 CallCost(),
             ),
@@ -151,6 +159,66 @@ class BudgetTrackerTests(TestCase):
                 with self.assertRaisesRegex(BudgetExceeded, limit):
                     tracker.after_model_call(usage, cost)
                 self.assertFalse(tracker.within_limits())
+
+    def test_cached_resends_do_not_exhaust_uncached_input_budget(self) -> None:
+        tracker = BudgetTracker(
+            budget(
+                max_active_context_tokens=100,
+                max_uncached_input_tokens=20,
+            ),
+            max_iterations=2,
+        )
+        for _ in range(2):
+            tracker.before_model_call()
+            tracker.after_model_call(
+                ModelUsage(
+                    input_tokens=100,
+                    output_tokens=1,
+                    cache_hit_tokens=90,
+                    cache_miss_tokens=10,
+                ),
+                CallCost(),
+            )
+        snapshot = tracker.snapshot()
+        self.assertEqual(snapshot.input_tokens, 200)
+        self.assertEqual(snapshot.uncached_input_tokens, 20)
+        self.assertEqual(snapshot.peak_active_context_tokens, 100)
+        self.assertTrue(tracker.within_limits())
+
+    def test_legacy_cumulative_input_guard_remains_fail_closed(self) -> None:
+        tracker = BudgetTracker(
+            budget(
+                max_active_context_tokens=100,
+                max_uncached_input_tokens=100,
+                max_input_tokens=99,
+            ),
+            max_iterations=1,
+        )
+        tracker.before_model_call()
+        with self.assertRaisesRegex(BudgetExceeded, "max_input_tokens"):
+            tracker.after_model_call(
+                ModelUsage(
+                    input_tokens=100,
+                    output_tokens=1,
+                    cache_hit_tokens=90,
+                    cache_miss_tokens=10,
+                ),
+                CallCost(),
+            )
+
+    def test_legacy_budget_does_not_invent_new_limits(self) -> None:
+        legacy = RunBudget.model_validate(
+            {
+                "max_model_calls": 10,
+                "max_tool_calls": 20,
+                "max_input_tokens": 100_000,
+                "max_output_tokens": 20_000,
+                "max_cost_usd": 5,
+                "max_duration_ms": 60_000,
+            }
+        )
+        self.assertIsNone(legacy.max_active_context_tokens)
+        self.assertIsNone(legacy.max_uncached_input_tokens)
 
     def test_model_call_limit_is_independent_from_iteration_limit(self) -> None:
         tracker = BudgetTracker(
@@ -511,6 +579,7 @@ class DeepSeekAdapterTests(TestCase):
             max_output_tokens=10,
         )
         self.assertEqual(result.usage.cache_hit_tokens, 40)
+        self.assertEqual(result.usage.uncached_input_tokens, 60)
         self.assertEqual(result.cost.input_usd, Decimal("0.00012"))
         self.assertEqual(result.cost.cache_usd, Decimal("0.00004"))
         self.assertEqual(result.cost.output_usd, Decimal("0.00006"))

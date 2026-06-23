@@ -65,7 +65,8 @@ def run_started(run_id: UUID, sequence: int = 0) -> RunStartedEvent:
         budget=RunBudget(
             max_model_calls=20,
             max_tool_calls=40,
-            max_input_tokens=100_000,
+            max_active_context_tokens=100_000,
+            max_uncached_input_tokens=100_000,
             max_output_tokens=20_000,
             max_cost_usd=Decimal("5"),
             max_duration_ms=600_000,
@@ -375,6 +376,7 @@ class MetricsTests(TestCase):
         self.assertEqual(metrics.cost_per_success_usd, Decimal("0.0031"))
         self.assertEqual(metrics.citation_precision, 1.0)
         self.assertEqual(metrics.required_claim_coverage, 1.0)
+        self.assertEqual(metrics.uncached_input_tokens, 488)
         self.assertEqual(metrics.peak_active_context_tokens, 1000)
         self.assertTrue(metrics.recovery_success)
 

@@ -38,9 +38,16 @@ C0 fails closed on:
 
 - maximum iterations;
 - model-call and tool-call counts;
-- input and output tokens;
+- active-context tokens for any single model call;
+- cumulative uncached input tokens and output tokens;
 - total model cost;
 - elapsed duration.
+
+A run still records cumulative raw input tokens and cache-hit tokens as
+observability metrics. Raw cumulative input is not a default budget primitive:
+prefix-cached history may be resent many times without consuming equivalent
+provider cost. The deprecated `max_input_tokens` field remains readable in old
+traces and is enforced only when explicitly supplied.
 
 A provider/network failure is `infra_api_failed` and excluded from the EGTSR
 denominator. Invalid model protocol, missing tool use, tool failure, and budget
